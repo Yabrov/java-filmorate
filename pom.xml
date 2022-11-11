@@ -12,7 +12,7 @@
 	<artifactId>filmorate</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>filmorate</name>
-	<description>Kinipoisk analog with Sring boot</description>
+	<description>Kinopoisk analog with Sring boot</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
