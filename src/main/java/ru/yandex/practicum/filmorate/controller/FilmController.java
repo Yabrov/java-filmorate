@@ -3,8 +3,8 @@ package ru.yandex.practicum.filmorate.controller;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.exception.FilmNotFound;
-import ru.yandex.practicum.filmorate.exception.WrongFilmReleaseDate;
+import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
+import ru.yandex.practicum.filmorate.exception.WrongFilmReleaseDateException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.Valid;
@@ -26,32 +26,27 @@ public class FilmController {
     public Film addFilm(@Valid @RequestBody Film film) {
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.error("Недопустимая дата релиза фильма: '{}'", film.getReleaseDateString());
-            throw new WrongFilmReleaseDate(film);
+            throw new WrongFilmReleaseDateException(film);
         }
         film.setId(nextId++);
-        log.info("Film with id={} created.", film.getId());
+        log.info("{} created.", film);
         films.put(film.getId(), film);
         return film;
     }
 
     @PutMapping(value = "/films", produces = MediaType.APPLICATION_JSON_VALUE)
     public Film updateFilm(@Valid @RequestBody Film film) {
-        if (film.getId() == null) {
-            log.error("Невозможно обновить фильм с id=null.");
-            throw new FilmNotFound(film);
+        if (film.getId() == null || !films.containsKey(film.getId())) {
+            log.error("Фильм с id={} не найден.", film.getId());
+            throw new FilmNotFoundException(film);
         }
         if (film.getReleaseDate().isBefore(MIN_RELEASE_DATE)) {
             log.error("Недопустимая дата релиза фильма: '{}'", film.getReleaseDateString());
-            throw new WrongFilmReleaseDate(film);
+            throw new WrongFilmReleaseDateException(film);
         }
-        if (films.containsKey(film.getId())) {
-            log.info("Фильм с id={} успешно обновлен.", film.getId());
-            films.replace(film.getId(), film);
-            return film;
-        } else {
-            log.error("Фильм с id={} не найден.", film.getId());
-            throw new FilmNotFound(film);
-        }
+        log.info("Фильм с id={} успешно обновлен.", film.getId());
+        films.replace(film.getId(), film);
+        return film;
     }
 
     @GetMapping(value = "/films", produces = MediaType.APPLICATION_JSON_VALUE)
