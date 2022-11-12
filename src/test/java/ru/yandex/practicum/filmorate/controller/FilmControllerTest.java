@@ -64,13 +64,27 @@ public class FilmControllerTest {
 
     @Test
     @DisplayName("Создание фильма с недопустимой датой релиза")
-    void wrongFilmReleaseDateTest() throws Exception {
+    void createFilmWithWrongReleaseDateTest() throws Exception {
         LocalDate wrongReleaseDate = LocalDate.of(1830, 10, 1);
         film.setReleaseDate(wrongReleaseDate);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(film));
         String expectedMes = "Release date " + wrongReleaseDate + " is wrong.";
+        mockMvc.perform(builder)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(expectedMes));
+    }
+
+    @Test
+    @DisplayName("Создание фильма с датой релиза = null")
+    void createFilmWithNullReleaseDateTest() throws Exception {
+        film.setReleaseDate(null);
+        MockHttpServletRequestBuilder builder = post("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(film));
+        String expectedMes = "Validation exception " +
+                "[class: 'film', field: 'releaseDate', reason: 'must not be null']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(expectedMes));
@@ -98,7 +112,7 @@ public class FilmControllerTest {
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(film));
         String expectedMes = "Validation exception " +
-                "[class: 'film', field: 'name', reason: 'must not be null']";
+                "[class: 'film', field: 'name', reason: 'must not be blank']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(expectedMes));
@@ -136,6 +150,20 @@ public class FilmControllerTest {
                 expectedId, resultFilm.getId(),
                 "Server hasn't create film with id=" + expectedId
         );
+    }
+
+    @Test
+    @DisplayName("Создание фильма с описанием=null")
+    void createFilmWithNullDescrTest() throws Exception {
+        film.setDescription(null);
+        MockHttpServletRequestBuilder builder = post("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(film));
+        String expectedMes = "Validation exception " +
+                "[class: 'film', field: 'description', reason: 'must not be null']";
+        mockMvc.perform(builder)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(expectedMes));
     }
 
     @Test

@@ -76,6 +76,20 @@ public class UserControllerTest {
     }
 
     @Test
+    @DisplayName("Создание пользователя с email=null")
+    void createUserWithNulldEmailTest() throws Exception {
+        user.setEmail(null);
+        MockHttpServletRequestBuilder builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(user));
+        String expectedMes = "Validation exception " +
+                "[class: 'user', field: 'email', reason: 'must not be blank']";
+        mockMvc.perform(builder)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(expectedMes));
+    }
+
+    @Test
     @DisplayName("Создание пользователя с датой рождения в будущем")
     void createUserWithFutureBirthdayTest() throws Exception {
         user.setBirthday(LocalDate.of(2033, 1, 1));
@@ -84,6 +98,20 @@ public class UserControllerTest {
                 .content(mapper.writeValueAsString(user));
         String expectedMes = "Validation exception " +
                 "[class: 'user', field: 'birthday', reason: 'must be a past date']";
+        mockMvc.perform(builder)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string(expectedMes));
+    }
+
+    @Test
+    @DisplayName("Создание пользователя с датой рождения null")
+    void createUserWithNullBirthdayTest() throws Exception {
+        user.setBirthday(null);
+        MockHttpServletRequestBuilder builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(mapper.writeValueAsString(user));
+        String expectedMes = "Validation exception " +
+                "[class: 'user', field: 'birthday', reason: 'must not be null']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(expectedMes));
