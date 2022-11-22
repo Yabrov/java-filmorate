@@ -20,6 +20,7 @@ public class User {
     private Integer id;
 
     @Email
+    @NotNull
     @NotBlank
     private String email;
 
