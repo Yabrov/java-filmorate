@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,25 +14,27 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
+import static org.hamcrest.Matchers.in;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
-public class UserControllerTest {
+public class UserControllerTest extends AbstractControllerTest {
 
     private User user;
 
-    private final ObjectMapper mapper = new ObjectMapper();
-
     @Autowired
-    private MockMvc mockMvc;
+    public UserControllerTest(MockMvc mockMvc) {
+        super(mockMvc);
+    }
 
+    @Override
     @BeforeEach
-    public void createTestFilmObject() {
+    protected void setUp() {
         user = new User();
         user.setId(null);
         user.setName("username");
@@ -52,13 +53,12 @@ public class UserControllerTest {
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value("1"))
                 .andReturn();
         User createdUser = mapper.readValue(result.getResponse().getContentAsString(), User.class);
         Integer expectedId = 1;
-        assertEquals(
-                expectedId, createdUser.getId(),
-                "Server hasn't create user with id=" + expectedId
-        );
+        user.setId(expectedId);
+        assertEquals(user, createdUser, "Server hasn't create user.");
     }
 
     @Test
@@ -68,25 +68,25 @@ public class UserControllerTest {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(user));
-        String expectedMes = "Validation exception " +
-                "[class: 'user', field: 'email', reason: 'must be a well-formed email address']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]")
+                        .value(String.format(ERROR_MES_TEMPLATE, "user", "email", "must be a well-formed email address")));
     }
 
     @Test
-    @DisplayName("Создание пользователя с email=null")
+    @DisplayName("Создание пользователя с email NULL")
     void createUserWithNulldEmailTest() throws Exception {
         user.setEmail(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(user));
-        String expectedMes = "Validation exception " +
-                "[class: 'user', field: 'email', reason: 'must not be blank']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
+                        String.format(ERROR_MES_TEMPLATE, "user", "email", "must not be blank"),
+                        String.format(ERROR_MES_TEMPLATE, "user", "email", "must not be null")
+                ))));
     }
 
     @Test
@@ -96,25 +96,23 @@ public class UserControllerTest {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(user));
-        String expectedMes = "Validation exception " +
-                "[class: 'user', field: 'birthday', reason: 'must be a past date']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]")
+                        .value(String.format(ERROR_MES_TEMPLATE, "user", "birthday", "must be a past date")));
     }
 
     @Test
-    @DisplayName("Создание пользователя с датой рождения null")
+    @DisplayName("Создание пользователя с датой рождения NULL")
     void createUserWithNullBirthdayTest() throws Exception {
         user.setBirthday(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(user));
-        String expectedMes = "Validation exception " +
-                "[class: 'user', field: 'birthday', reason: 'must not be null']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]")
+                        .value(String.format(ERROR_MES_TEMPLATE, "user", "birthday", "must not be null")));
     }
 
     @Test
@@ -124,11 +122,10 @@ public class UserControllerTest {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(mapper.writeValueAsString(user));
-        String expectedMes = "Validation exception " +
-                "[class: 'user', field: 'login', reason: 'must not be blank']";
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]")
+                        .value(String.format(ERROR_MES_TEMPLATE, "user", "login", "must not be blank")));
     }
 
     @Test
@@ -160,7 +157,7 @@ public class UserControllerTest {
     }
 
     @Test
-    @DisplayName("Обновление пользователя c id=null")
+    @DisplayName("Обновление пользователя c id NULL")
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void updateUserWithNullIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
@@ -178,7 +175,7 @@ public class UserControllerTest {
         String expectedMes = "User with id=" + user.getId() + " doesn't exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
-                .andExpect(content().string(expectedMes));
+                .andExpect(jsonPath("$.reasons[0]").value(expectedMes));
     }
 
     @Test
@@ -203,7 +200,8 @@ public class UserControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
         List<User> resultFilms = mapper
-                .readValue(result.getResponse().getContentAsString(), new TypeReference<>() {});
+                .readValue(result.getResponse().getContentAsString(), new TypeReference<>() {
+                });
         Integer expectedFilmsCount = 2;
         assertEquals(expectedFilmsCount, resultFilms.size(),
                 "Server hasn't return right users list.");
