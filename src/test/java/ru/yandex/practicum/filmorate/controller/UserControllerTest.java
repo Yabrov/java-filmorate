@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,24 +23,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(UserController.class)
+@ComponentScan("ru.yandex.practicum.filmorate")
 public class UserControllerTest extends AbstractControllerTest {
 
-    private User user;
+    private final User user = User.builder()
+            .id(null)
+            .login("login")
+            .name("username")
+            .email("test@domain.xxx")
+            .birthday(LocalDate.of(1980, 1, 1))
+            .build();
 
     @Autowired
     public UserControllerTest(MockMvc mockMvc) {
         super(mockMvc);
-    }
-
-    @Override
-    @BeforeEach
-    protected void setUp() {
-        user = new User();
-        user.setId(null);
-        user.setName("username");
-        user.setLogin("login");
-        user.setEmail("test@domain.xxx");
-        user.setBirthday(LocalDate.of(1980, 1, 1));
     }
 
     @Test
@@ -57,17 +53,16 @@ public class UserControllerTest extends AbstractControllerTest {
                 .andReturn();
         User createdUser = mapper.readValue(result.getResponse().getContentAsString(), User.class);
         Integer expectedId = 1;
-        user.setId(expectedId);
-        assertEquals(user, createdUser, "Server hasn't create user.");
+        assertEquals(user.withId(expectedId), createdUser, "Server hasn't create user.");
     }
 
     @Test
     @DisplayName("Создание пользователя с неправильным email")
     void createUserWithInvalidEmailTest() throws Exception {
-        user.setEmail("xxx");
+        User testUser = user.withEmail("xxx");
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -77,10 +72,10 @@ public class UserControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание пользователя с email NULL")
     void createUserWithNulldEmailTest() throws Exception {
-        user.setEmail(null);
+        User testUser = user.withEmail(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -92,10 +87,10 @@ public class UserControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание пользователя с датой рождения в будущем")
     void createUserWithFutureBirthdayTest() throws Exception {
-        user.setBirthday(LocalDate.of(2033, 1, 1));
+        User testUser = user.withBirthday(LocalDate.of(2033, 1, 1));
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -105,10 +100,10 @@ public class UserControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание пользователя с датой рождения NULL")
     void createUserWithNullBirthdayTest() throws Exception {
-        user.setBirthday(null);
+        User testUser = user.withBirthday(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -118,10 +113,10 @@ public class UserControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание пользователя с пустым логином")
     void createUserWithEmptyLoginTest() throws Exception {
-        user.setLogin("");
+        User testUser = user.withLogin("");
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -139,11 +134,10 @@ public class UserControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
-        user.setId(1);
-        user.setName("Updated username");
+        User testUser = user.withId(1).withName("Updated username");
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
+                .content(mapper.writeValueAsString(testUser));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -167,12 +161,11 @@ public class UserControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
-        user.setId(null);
-        user.setName("Updated username");
+        User testUser = user.withId(null).withName("Updated username");
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(user));
-        String expectedMes = "User with id=" + user.getId() + " doesn't exist.";
+                .content(mapper.writeValueAsString(testUser));
+        String expectedMes = "User with id=" + testUser.getId() + " doesn't exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.reasons[0]").value(expectedMes));

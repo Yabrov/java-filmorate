@@ -2,13 +2,13 @@ package ru.yandex.practicum.filmorate.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import org.assertj.core.internal.bytebuddy.utility.RandomString;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,24 +26,20 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(FilmController.class)
+@ComponentScan("ru.yandex.practicum.filmorate")
 public class FilmControllerTest extends AbstractControllerTest {
 
-    private Film film;
+    private final Film film = Film.builder()
+            .id(null)
+            .name("Film test name")
+            .description("Film test descr")
+            .duration(120)
+            .releaseDate(LocalDate.of(2022, 11, 1))
+            .build();
 
     @Autowired
-    public FilmControllerTest(MockMvc mockMvc) {
+    public FilmControllerTest(@Autowired MockMvc mockMvc) {
         super(mockMvc);
-    }
-
-    @Override
-    @BeforeEach
-    protected void setUp() {
-        film = new Film();
-        film.setId(null);
-        film.setName("Film test name");
-        film.setDescription("Film test descr");
-        film.setDuration(120);
-        film.setReleaseDate(LocalDate.of(2022, 11, 1));
     }
 
     @Test
@@ -60,18 +56,17 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andReturn();
         Film createdFilm = mapper.readValue(result.getResponse().getContentAsString(), Film.class);
         Integer expectedId = 1;
-        film.setId(expectedId);
-        assertEquals(film, createdFilm,"Server hasn't create film.");
+        assertEquals(film.withId(expectedId), createdFilm, "Server hasn't create film.");
     }
 
     @Test
     @DisplayName("Создание фильма с недопустимой датой релиза")
     void createFilmWithWrongReleaseDateTest() throws Exception {
         LocalDate wrongReleaseDate = LocalDate.of(1830, 10, 1);
-        film.setReleaseDate(wrongReleaseDate);
+        Film testFilm = film.withReleaseDate(wrongReleaseDate);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -81,10 +76,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма с датой релиза = null")
     void createFilmWithNullReleaseDateTest() throws Exception {
-        film.setReleaseDate(null);
+        Film testFilm = film.withReleaseDate(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -97,10 +92,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @ParameterizedTest(name = "{index}. Проверка невалидности названия фильма '{arguments}'")
     @ValueSource(strings = {"", "  "})
     void createFilmWithEmptyNameTest(String name) throws Exception {
-        film.setName("");
+        Film testFilm = film.withName("");
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -110,10 +105,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма с названием NULL")
     void createFilmWithNullNameTest() throws Exception {
-        film.setName(null);
+        Film testFilm = film.withName(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -125,10 +120,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма с длинным описанием > 200")
     void createFilmWithDescrLenMoreThan200CharsTest() throws Exception {
-        film.setDescription(new RandomString(201).nextString());
+        Film testFilm = film.withDescription(new RandomString(201).nextString());
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -139,10 +134,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @DisplayName("Создание фильма с пустым описанием")
     @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void createFilmWithEmptyDescrTest() throws Exception {
-        film.setDescription("");
+        Film testFilm = film.withDescription("");
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -150,17 +145,16 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andReturn();
         Film createdFilm = mapper.readValue(result.getResponse().getContentAsString(), Film.class);
         Integer expectedId = 1;
-        film.setId(expectedId);
-        assertEquals(film, createdFilm,"Server hasn't create film.");
+        assertEquals(testFilm.withId(expectedId), createdFilm, "Server hasn't create film.");
     }
 
     @Test
     @DisplayName("Создание фильма с описанием NULL")
     void createFilmWithNullDescrTest() throws Exception {
-        film.setDescription(null);
+        Film testFilm = film.withDescription(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -170,10 +164,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма с отрицательной продолжительностью")
     void createFilmWithNegativeDurationTest() throws Exception {
-        film.setDuration(-1);
+        Film testFilm = film.withDuration(-1);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -183,10 +177,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма с продолжительностью = 0")
     void createFilmWithZeroDurationTest() throws Exception {
-        film.setDuration(0);
+        Film testFilm = film.withDuration(0);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -196,10 +190,10 @@ public class FilmControllerTest extends AbstractControllerTest {
     @Test
     @DisplayName("Создание фильма равного null")
     void createNullFilmTest() throws Exception {
-        film = null;
+        Film testFilm = null;
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         mockMvc.perform(builder).andExpect(status().is4xxClientError());
     }
 
@@ -214,11 +208,10 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
-        film.setId(1);
-        film.setDescription("Updated descr");
+        Film testFilm = film.withId(1).withDescription("Updated descr");
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
+                .content(mapper.writeValueAsString(testFilm));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -242,12 +235,11 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
-        film.setId(null);
-        film.setDescription("Updated descr");
+        Film testFilm = film.withId(null).withDescription("Updated descr");
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(mapper.writeValueAsString(film));
-        String expectedMes = "Film with id=" + film.getId() + " doesn't exist.";
+                .content(mapper.writeValueAsString(testFilm));
+        String expectedMes = "Film with id=" + testFilm.getId() + " doesn't exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.reasons[0]").value(expectedMes));
