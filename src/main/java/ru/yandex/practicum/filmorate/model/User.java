@@ -1,11 +1,15 @@
 package ru.yandex.practicum.filmorate.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer;
-import lombok.Data;
+import lombok.Builder;
+import lombok.Value;
+import lombok.With;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
@@ -13,26 +17,49 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
 
-@Data
+@Value
+@Builder
 @NotNull
 public class User {
 
-    private Integer id;
+    @With
+    Integer id;
 
+    @With
     @Email
     @NotNull
     @NotBlank
-    private String email;
+    String email;
 
+    @With
     @NotBlank
-    private String login;
+    String login;
 
-    private String name;
+    @With
+    String name;
 
+    @With
     @Past
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
-    private LocalDate birthday;
+    LocalDate birthday;
+
+    @JsonCreator
+    public User(
+            @JsonProperty("id") Integer id,
+            @JsonProperty("email") String email,
+            @JsonProperty("login") String login,
+            @JsonProperty("name") String name,
+            @JsonFormat(pattern = "yyyy-MM-dd")
+            @JsonSerialize(using = LocalDateSerializer.class)
+            @JsonDeserialize(using = LocalDateDeserializer.class)
+            @JsonProperty("birthday") LocalDate birthday) {
+        this.id = id;
+        this.email = email;
+        this.login = login;
+        this.name = name;
+        this.birthday = birthday;
+    }
 }
