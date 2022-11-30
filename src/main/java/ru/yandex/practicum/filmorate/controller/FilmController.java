@@ -18,6 +18,11 @@ public class FilmController {
         this.filmService = filmService;
     }
 
+    @GetMapping(value = "/films/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Film getFilm(@PathVariable Integer id) {
+        return filmService.getFilmById(id);
+    }
+
     @PostMapping(value = "/films", produces = MediaType.APPLICATION_JSON_VALUE)
     public Film addFilm(@Valid @RequestBody Film film) {
         return filmService.createFilm(film);
@@ -31,5 +36,20 @@ public class FilmController {
     @GetMapping(value = "/films", produces = MediaType.APPLICATION_JSON_VALUE)
     public Iterable<Film> getAllFilms() {
         return filmService.getAllFilms();
+    }
+
+    @PutMapping(value = "/films/{id}/like/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Film addLike(@PathVariable("id") Integer filmId, @PathVariable Integer userId) {
+        return filmService.addLike(userId, filmId);
+    }
+
+    @DeleteMapping(value = "/films/{id}/like/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Film removeLike(@PathVariable("id") Integer filmId, @PathVariable Integer userId) {
+        return filmService.removeLike(userId, filmId);
+    }
+
+    @GetMapping(value = "/films/popular", produces = MediaType.APPLICATION_JSON_VALUE)
+    public Iterable<Film> getMostPopularFilms(@RequestParam(defaultValue = "10") Integer count) {
+        return filmService.getMostPopularFilms(count);
     }
 }
