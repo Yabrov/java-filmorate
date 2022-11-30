@@ -12,4 +12,9 @@ public class FilmNotFoundException extends RuntimeException {
         super("Film with id=" + film.getId() + " doesn't exist.");
         this.film = film;
     }
+
+    public FilmNotFoundException(Integer filmId) {
+        super("Film with id=" + filmId + " doesn't exist.");
+        this.film = null;
+    }
 }

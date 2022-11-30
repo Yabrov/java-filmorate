@@ -12,4 +12,9 @@ public class UserNotFoundException extends RuntimeException {
         super("User with id=" + user.getId() + " doesn't exist.");
         this.user = user;
     }
+
+    public UserNotFoundException(Integer userId) {
+        super("User with id=" + userId + " doesn't exist.");
+        this.user = null;
+    }
 }
