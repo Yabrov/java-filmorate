@@ -27,11 +27,14 @@ public class InMemoryUserRepository implements AbstractRepository<User> {
 
     @Override
     public User update(User user) {
-        if (!users.containsKey(user.getId())) {
+        User oldUser = users.get(user.getId());
+        if (oldUser == null) {
             throw new UserNotFoundException(user);
         }
+        user.getLikedFilms().addAll(oldUser.getLikedFilms());
+        user.getFriends().addAll(oldUser.getFriends());
         log.info("User with id={} has been updated.", user.getId());
-        users.replace(user.getId(), user);
+        users.replace(user.getId(), oldUser, user);
         return user;
     }
 
