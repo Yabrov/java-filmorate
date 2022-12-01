@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Comparator;
 import java.util.stream.Collectors;
@@ -16,19 +16,19 @@ import java.util.stream.Collectors;
 public class FilmService {
 
     private final static Comparator<Film> filmPopularityComparator = Comparator
-            .comparing((Film film) -> film.getLikes().size()).reversed();
+            .comparing((Film film) -> film.getLikesCount().get()).reversed();
 
-    private final FilmStorage filmStorage;
+    private final AbstractRepository<Film> filmRepository;
     private final UserService userService;
 
     @Autowired
-    public FilmService(FilmStorage filmStorage, UserService userService) {
-        this.filmStorage = filmStorage;
+    public FilmService(AbstractRepository<Film> filmRepository, UserService userService) {
+        this.filmRepository = filmRepository;
         this.userService = userService;
     }
 
     public Film getFilmById(Integer filmId) {
-        Film film = filmStorage.getFilm(filmId);
+        Film film = filmRepository.findById(filmId);
         if (film == null) {
             throw new FilmNotFoundException(filmId);
         }
@@ -36,39 +36,41 @@ public class FilmService {
     }
 
     public Film createFilm(Film film) {
-        return filmStorage.persistFilm(film);
+        return filmRepository.save(film);
     }
 
     public Film updateFilm(Film film) {
         if (film.getId() == null) {
             throw new FilmNotFoundException(film);
         }
-        return filmStorage.replaceFilm(film);
+        return filmRepository.update(film);
     }
 
     public Iterable<Film> getAllFilms() {
-        return filmStorage.getAllFilms();
+        return filmRepository.findAll();
     }
 
     public Film addLike(Integer userId, Integer filmId) {
         User user = userService.getUserById(userId);
         Film film = getFilmById(filmId);
-        log.info("Пользователь с id={} лайкнул фильм '{}'.", user.getId(), film.getName());
-        film.getLikes().add(userId);
+        log.info("User with id={} has liked film '{}'.", user.getId(), film.getName());
+        user.getLikedFilms().add(filmId);
+        film.getLikesCount().incrementAndGet();
         return film;
     }
 
     public Film removeLike(Integer userId, Integer filmId) {
         User user = userService.getUserById(userId);
         Film film = getFilmById(filmId);
-        log.info("Пользователь с id={} убрал лайк с фильма '{}'.", user.getId(), film.getName());
-        film.getLikes().remove(userId);
+        log.info("User with id={} has removed like from film '{}'.", user.getId(), film.getName());
+        user.getLikedFilms().remove(filmId);
+        film.getLikesCount().decrementAndGet();
         return film;
     }
 
     public Iterable<Film> getMostPopularFilms(int count) {
-        return filmStorage
-                .getAllFilms()
+        return filmRepository
+                .findAll()
                 .stream()
                 .sorted(filmPopularityComparator)
                 .limit(count)

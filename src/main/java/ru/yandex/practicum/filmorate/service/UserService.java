@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.service;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,17 +15,13 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class UserService {
 
-    private final UserStorage userStorage;
-
-    @Autowired
-    public UserService(UserStorage userStorage) {
-        this.userStorage = userStorage;
-    }
+    private final AbstractRepository<User> userRepository;
 
     public User getUserById(Integer userId) {
-        User user = userStorage.getUser(userId);
+        User user = userRepository.findById(userId);
         if (user == null) {
             throw new UserNotFoundException(userId);
         }
@@ -34,8 +30,8 @@ public class UserService {
 
     public User createUser(User user) {
         return isBlank(user.getName())
-                ? userStorage.persistUser(user.withName(user.getLogin()))
-                : userStorage.persistUser(user);
+                ? userRepository.save(user.withName(user.getLogin()))
+                : userRepository.save(user);
     }
 
     public User updateUser(User user) {
@@ -43,12 +39,12 @@ public class UserService {
             throw new UserNotFoundException(user);
         }
         return isBlank(user.getName())
-                ? userStorage.replaceUser(user.withName(user.getLogin()))
-                : userStorage.replaceUser(user);
+                ? userRepository.update(user.withName(user.getLogin()))
+                : userRepository.update(user);
     }
 
     public Iterable<User> getAllUsers() {
-        return userStorage.getAllUsers();
+        return userRepository.findAll();
     }
 
     public User addFriend(Integer friendId, Integer userId) {
@@ -57,7 +53,7 @@ public class UserService {
         }
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        log.info("Пользователи с id=[{}, {}] теперь друзья.", userId, friendId);
+        log.info("Users with ids [{}, {}] are friends now.", userId, friendId);
         user.getFriends().add(friendId);
         friend.getFriends().add(userId);
         return user;
@@ -66,7 +62,7 @@ public class UserService {
     public User removeFriend(Integer friendId, Integer userId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        log.info("Пользователи с id=[{}, {}] больше не друзья.", userId, friendId);
+        log.info("Users with ids [{}, {}] are not friends now", userId, friendId);
         user.getFriends().remove(friendId);
         friend.getFriends().remove(userId);
         return user;
@@ -79,7 +75,7 @@ public class UserService {
         mutualFriendsSet.retainAll(otherUser.getFriends());
         return mutualFriendsSet
                 .stream()
-                .map(userStorage::getUser)
+                .map(userRepository::findById)
                 .collect(Collectors.toList());
     }
 
@@ -87,7 +83,7 @@ public class UserService {
         return getUserById(userId)
                 .getFriends()
                 .stream()
-                .map(userStorage::getUser)
+                .map(userRepository::findById)
                 .collect(Collectors.toList());
     }
 }
