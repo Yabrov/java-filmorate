@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -21,6 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WebMvcTest(UserController.class)
+@ComponentScan("ru.yandex.practicum.filmorate")
 public class UserControllerTest extends AbstractControllerTest {
 
     @Autowired
@@ -154,7 +158,7 @@ public class UserControllerTest extends AbstractControllerTest {
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(getMapper().writeValueAsString(testUser));
-        String expectedMes = "User with id=" + testUser.getId() + " doesn't exist.";
+        String expectedMes = "User with id=" + testUser.getId() + " does not exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.reasons[0]").value(expectedMes));
@@ -338,7 +342,7 @@ public class UserControllerTest extends AbstractControllerTest {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.friends.size()").value(i-1));
+                    .andExpect(jsonPath("$.friends.size()").value(i - 1));
         }
         for (int i = 2; i <= 10; i++) {
             builder = get("/users/{id}", i);
@@ -375,7 +379,7 @@ public class UserControllerTest extends AbstractControllerTest {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.friends.size()").value(i-1));
+                    .andExpect(jsonPath("$.friends.size()").value(i - 1));
         }
         // Adding users [5-9] to user 9 friends
         for (int i = 5; i <= 9; i++) {
@@ -383,7 +387,7 @@ public class UserControllerTest extends AbstractControllerTest {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.friends.size()").value(i-4));
+                    .andExpect(jsonPath("$.friends.size()").value(i - 4));
         }
         builder = get("/users/{id}/friends/common/{otherId}", 1, 10);
         mockMvc.perform(builder)

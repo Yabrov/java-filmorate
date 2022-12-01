@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -25,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@WebMvcTest({FilmController.class, UserController.class})
+@ComponentScan("ru.yandex.practicum.filmorate")
 public class FilmControllerTest extends AbstractControllerTest {
 
     @Autowired
@@ -229,7 +233,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(getMapper().writeValueAsString(testFilm));
-        String expectedMes = "Film with id=" + testFilm.getId() + " doesn't exist.";
+        String expectedMes = "Film with id=" + testFilm.getId() + " does not exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.reasons[0]").value(expectedMes));
@@ -320,7 +324,12 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likes[0]").value(createdUser.getId()));
+                .andExpect(jsonPath("$.likesCount").value(1));
+        builder = get("/users/{userId}", createdUser.getId());
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.likedFilms[0]").value(createdFilm.getId()));
     }
 
     @Test
@@ -384,13 +393,18 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likes[0]").value(createdUser.getId()));
+                .andExpect(jsonPath("$.likesCount").value(1));
         // User removes like from film
         builder = delete("/films/{filmId}/like/{userId}", createdFilm.getId(), createdUser.getId());
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likes", empty()));
+                .andExpect(jsonPath("$.likesCount").value(0));
+        builder = get("/users/{userId}", createdUser.getId());
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.likedFilms", empty()));
     }
 
     @DisplayName("Получение рейтинга фильмов")
@@ -426,7 +440,7 @@ public class FilmControllerTest extends AbstractControllerTest {
                 mockMvc.perform(builder)
                         .andExpect(status().isOk())
                         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                        .andExpect(jsonPath("$.likes.size()").value(11 - j));
+                        .andExpect(jsonPath("$.likesCount").value(11 - j));
             }
         }
         // Getting rating
@@ -436,10 +450,11 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.size()").value(count));
         for (int i = 1; i <= count; i++) {
+            builder = get("/users/{userId}", i);
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$[%s].likes.size()", i - 1).value(11 - i));
+                    .andExpect(jsonPath("$.likedFilms.size()").value(i));
         }
     }
 }
