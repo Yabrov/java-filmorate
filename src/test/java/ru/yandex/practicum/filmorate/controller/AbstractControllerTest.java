@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -45,5 +46,13 @@ abstract class AbstractControllerTest {
         objectMapper.registerModule(new JavaTimeModule());
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         return objectMapper;
+    }
+
+    protected static <T> T deserializeMvcResult(MvcResult mvcResult, Class<T> clazz) throws Exception {
+        return getMapper().readValue(mvcResult.getResponse().getContentAsString(), clazz);
+    }
+
+    protected static String serializeObject(Object obj) throws Exception {
+        return getMapper().writeValueAsString(obj);
     }
 }
