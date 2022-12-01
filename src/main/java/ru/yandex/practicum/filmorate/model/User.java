@@ -50,6 +50,8 @@ public class User {
 
     Set<Integer> friends = new HashSet<>();
 
+    Set<Integer> likedFilms = new HashSet<>();
+
     @JsonCreator
     public User(
             @JsonProperty("id") Integer id,
