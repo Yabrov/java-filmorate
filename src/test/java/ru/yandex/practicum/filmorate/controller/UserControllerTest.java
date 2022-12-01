@@ -38,13 +38,13 @@ public class UserControllerTest extends AbstractControllerTest {
     void createValidUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value("1"))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         Integer expectedId = 1;
         assertEquals(user.withId(expectedId), createdUser, "Server hasn't create user.");
     }
@@ -55,7 +55,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withEmail("xxx");
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -68,7 +68,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withEmail(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -83,7 +83,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withBirthday(LocalDate.of(2033, 1, 1));
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -96,7 +96,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withBirthday(null);
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -109,7 +109,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withLogin("");
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -122,7 +122,7 @@ public class UserControllerTest extends AbstractControllerTest {
     void updateUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -130,12 +130,12 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withId(1).withName("Updated username");
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User updatedUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User updatedUser = deserializeMvcResult(result, User.class);
         String expectedName = "Updated username";
         assertEquals(
                 expectedName, updatedUser.getName(),
@@ -149,7 +149,7 @@ public class UserControllerTest extends AbstractControllerTest {
     void updateUserWithNullIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -157,7 +157,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User testUser = user.withId(null).withName("Updated username");
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testUser));
+                .content(serializeObject(testUser));
         String expectedMes = "User with id=" + testUser.getId() + " does not exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
@@ -170,7 +170,7 @@ public class UserControllerTest extends AbstractControllerTest {
     void getAllUsersTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user1
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -198,18 +198,18 @@ public class UserControllerTest extends AbstractControllerTest {
     void getExistingUserByIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         builder = get("/users/{userId}", createdUser.getId());
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User gottenUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User gottenUser = deserializeMvcResult(result, User.class);
         assertEquals(createdUser, gottenUser, "Запрашиваемый пользователь не был получен.");
     }
 
@@ -227,22 +227,22 @@ public class UserControllerTest extends AbstractControllerTest {
     void ExistingUserAddsExistingUserToFriendsTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user.withName("User friend")));
+                .content(serializeObject(user.withName("User friend")));
         // Creating friend
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdFriend = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdFriend = deserializeMvcResult(result, User.class);
         // User becomes friends with friend
         builder = put("/users/{id}/friends/{friendId}", createdUser.getId(), createdFriend.getId());
         mockMvc.perform(builder)
@@ -256,13 +256,13 @@ public class UserControllerTest extends AbstractControllerTest {
     void NotExistingUserAddsExistingUserToFriendsTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user.withName("User friend")));
+                .content(serializeObject(user.withName("User friend")));
         // Creating friend
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdFriend = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdFriend = deserializeMvcResult(result, User.class);
         // Not existing user becomes friends with friend
         Integer notExistingUserId = 9999;
         builder = put("/users/{id}/friends/{friendId}", notExistingUserId, createdFriend.getId());
@@ -274,13 +274,13 @@ public class UserControllerTest extends AbstractControllerTest {
     void ExistingUserAddsHimselfToFriendsTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user.withName("User friend")));
+                .content(serializeObject(user.withName("User friend")));
         // Creating friend
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         // User adds himself
         builder = put("/users/{id}/friends/{friendId}", createdUser.getId(), createdUser.getId());
         mockMvc.perform(builder).andExpect(status().isInternalServerError());
@@ -291,22 +291,22 @@ public class UserControllerTest extends AbstractControllerTest {
     void ExistingUserRemovesExistingFriendTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user.withName("User friend")));
+                .content(serializeObject(user.withName("User friend")));
         // Creating friend
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdFriend = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdFriend = deserializeMvcResult(result, User.class);
         // User becomes friends with friend
         builder = put("/users/{id}/friends/{friendId}", createdUser.getId(), createdFriend.getId());
         mockMvc.perform(builder)
@@ -330,7 +330,7 @@ public class UserControllerTest extends AbstractControllerTest {
         for (int i = 1; i <= 10; i++) {
             builder = post("/users")
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .content(getMapper().writeValueAsString(user.withLogin("User " + i)));
+                    .content(serializeObject(user.withLogin("User " + i)));
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -367,7 +367,7 @@ public class UserControllerTest extends AbstractControllerTest {
         for (int i = 1; i <= 10; i++) {
             builder = post("/users")
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .content(getMapper().writeValueAsString(user.withLogin("User " + i)));
+                    .content(serializeObject(user.withLogin("User " + i)));
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -395,5 +395,91 @@ public class UserControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.size()").value(1))
                 .andExpect(jsonPath("$.[0].id").value(5));
+    }
+
+    @Test
+    @DisplayName("Восстановление списка друзей после обновления сущ. пользователя")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void restoreFriendsListAfterUpdatingExistingUserTest() throws Exception {
+        MockHttpServletRequestBuilder builder;
+        // Creating 10 users
+        for (int i = 1; i <= 10; i++) {
+            builder = post("/users")
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .content(serializeObject(user.withLogin("User " + i)));
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.id").value(i));
+        }
+        // Adding users [2-10] to user 1 friends
+        for (int i = 2; i <= 10; i++) {
+            builder = put("/users/{id}/friends/{friendId}", 1, i);
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.friends.size()").value(i - 1));
+        }
+        builder = get("/users/{userId}", 1);
+        MvcResult result = mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.friends.size()").value(9))
+                .andExpect(jsonPath("$.id").value(1))
+                .andReturn();
+        User createdUser = deserializeMvcResult(result, User.class);
+        builder = put("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(createdUser.withName("Updated user")));
+        // Updating created user
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.friends.size()").value(9));
+    }
+
+    @Test
+    @DisplayName("Восстановление списка фильмов после обновления сущ. пользователя")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void restoreFilmsListAfterUpdatingExistingUserTest() throws Exception {
+        MockHttpServletRequestBuilder builder;
+        builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(user));
+        // Creating user
+        MvcResult result = mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andReturn();
+        User createdUser = deserializeMvcResult(result, User.class);
+        // Creating 10 films
+        for (int i = 1; i <= 10; i++) {
+            builder = post("/films")
+                    .contentType(MediaType.APPLICATION_JSON_VALUE)
+                    .content(serializeObject(film.withName("Film " + i)));
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.id").value(i));
+        }
+        // Wrapping likes
+        for (int i = 1; i <= 10; i++) {
+            builder = put("/films/{filmId}/like/{userId}", i, createdUser.getId());
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.likesCount").value(1));
+        }
+        builder = put("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(createdUser.withName("Updated user")));
+        // Updating user
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.likedFilms.size()").value(10));
     }
 }
