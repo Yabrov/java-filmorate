@@ -42,13 +42,13 @@ public class FilmControllerTest extends AbstractControllerTest {
     void createValidFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value("1"))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         Integer expectedId = 1;
         assertEquals(film.withId(expectedId), createdFilm, "Server hasn't create film.");
     }
@@ -60,7 +60,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withReleaseDate(wrongReleaseDate);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -73,7 +73,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withReleaseDate(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -89,7 +89,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withName("");
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -102,7 +102,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withName(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]", in(Arrays.asList(
@@ -117,7 +117,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withDescription(new RandomString(201).nextString());
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -131,13 +131,13 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withDescription("");
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value("1"))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         Integer expectedId = 1;
         assertEquals(testFilm.withId(expectedId), createdFilm, "Server hasn't create film.");
     }
@@ -148,7 +148,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withDescription(null);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -161,7 +161,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withDuration(-1);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -174,7 +174,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withDuration(0);
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.reasons[0]")
@@ -187,7 +187,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = null;
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         mockMvc.perform(builder).andExpect(status().is4xxClientError());
     }
 
@@ -197,7 +197,7 @@ public class FilmControllerTest extends AbstractControllerTest {
     void updateFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -205,12 +205,12 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withId(1).withDescription("Updated descr");
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film updatedFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film updatedFilm = deserializeMvcResult(result, Film.class);
         String expectedDesc = "Updated descr";
         assertEquals(
                 expectedDesc, updatedFilm.getDescription(),
@@ -224,7 +224,7 @@ public class FilmControllerTest extends AbstractControllerTest {
     void updateFilmWithNullIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -232,7 +232,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         Film testFilm = film.withId(null).withDescription("Updated descr");
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(testFilm));
+                .content(serializeObject(testFilm));
         String expectedMes = "Film with id=" + testFilm.getId() + " does not exist.";
         mockMvc.perform(builder)
                 .andExpect(status().isNotFound())
@@ -245,7 +245,7 @@ public class FilmControllerTest extends AbstractControllerTest {
     void getAllFilmsTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film1
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -273,19 +273,19 @@ public class FilmControllerTest extends AbstractControllerTest {
     void getExistingFilmByIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = get("/films/{filmId}", createdFilm.getId());
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film gottenFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film gottenFilm = deserializeMvcResult(result, Film.class);
         assertEquals(createdFilm, gottenFilm, "Запрашиваемый фильм не был получен.");
     }
 
@@ -304,22 +304,22 @@ public class FilmControllerTest extends AbstractControllerTest {
     void existingUserLikesExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         builder = put("/films/{filmId}/like/{userId}", createdFilm.getId(), createdUser.getId());
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -338,13 +338,13 @@ public class FilmControllerTest extends AbstractControllerTest {
     void notExistingUserLikesExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = put("/films/{filmId}/like/{userId}", createdFilm.getId(), 1);
         mockMvc.perform(builder).andExpect(status().isNotFound());
     }
@@ -355,13 +355,13 @@ public class FilmControllerTest extends AbstractControllerTest {
     void existingUserLikesNotExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         builder = put("/films/{filmId}/like/{userId}", 1, createdUser.getId());
         mockMvc.perform(builder).andExpect(status().isNotFound());
     }
@@ -372,22 +372,22 @@ public class FilmControllerTest extends AbstractControllerTest {
     void existingUserRemovesLikeFromExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(film));
+                .content(serializeObject(film));
         // Creating film
         MvcResult result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        Film createdFilm = getMapper().readValue(result.getResponse().getContentAsString(), Film.class);
+        Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(getMapper().writeValueAsString(user));
+                .content(serializeObject(user));
         // Creating user
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andReturn();
-        User createdUser = getMapper().readValue(result.getResponse().getContentAsString(), User.class);
+        User createdUser = deserializeMvcResult(result, User.class);
         // User likes film
         builder = put("/films/{filmId}/like/{userId}", createdFilm.getId(), createdUser.getId());
         mockMvc.perform(builder)
@@ -417,7 +417,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         for (int i = 1; i <= 10; i++) {
             builder = post("/users")
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .content(getMapper().writeValueAsString(user.withLogin("User " + i)));
+                    .content(serializeObject(user.withLogin("User " + i)));
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -427,7 +427,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         for (int i = 1; i <= 10; i++) {
             builder = post("/films")
                     .contentType(MediaType.APPLICATION_JSON_VALUE)
-                    .content(getMapper().writeValueAsString(film.withName("Film " + i)));
+                    .content(serializeObject(film.withName("Film " + i)));
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
@@ -456,5 +456,45 @@ public class FilmControllerTest extends AbstractControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(jsonPath("$.likedFilms.size()").value(i));
         }
+    }
+
+    @Test
+    @DisplayName("Проверка восстановления кол-ва лайков после обновления сущ. фильма")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void restoreLikesCountAfterExistingFilmUpdatingTest() throws Exception {
+        MockHttpServletRequestBuilder builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(user));
+        // Creating user
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1));
+        builder = post("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(film));
+        // Creating film
+        MvcResult result = mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.likesCount").value(0))
+                .andReturn();
+        Film createdFilm = deserializeMvcResult(result, Film.class);
+        builder = put("/films/{filmId}/like/{userId}", createdFilm.getId(), 1);
+        // User likes film
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.likesCount").value(1));
+        builder = put("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(createdFilm.withName("Updated film")));
+        // Updating created film
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.likesCount").value(1));
     }
 }
