@@ -32,7 +32,7 @@ public class InMemoryFilmRepository implements AbstractRepository<Film> {
             throw new FilmNotFoundException(film);
         }
         log.info("Film with id={} has been updated.", film.getId());
-        film.getLikesCount().addAndGet(oldFilm.getLikesCount().get());
+        film.getLikesCount().set(oldFilm.getLikesCount().get());
         films.replace(film.getId(), oldFilm, film);
         return film;
     }
