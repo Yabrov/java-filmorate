@@ -27,11 +27,13 @@ public class InMemoryFilmRepository implements AbstractRepository<Film> {
 
     @Override
     public Film update(Film film) {
-        if (!films.containsKey(film.getId())) {
+        Film oldFilm = films.get(film.getId());
+        if (oldFilm == null) {
             throw new FilmNotFoundException(film);
         }
         log.info("Film with id={} has been updated.", film.getId());
-        films.replace(film.getId(), film);
+        film.getLikesCount().addAndGet(oldFilm.getLikesCount().get());
+        films.replace(film.getId(), oldFilm, film);
         return film;
     }
 
