@@ -51,7 +51,7 @@ public class ErrorController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<Object> genericExceptionHandler(Exception ex, WebRequest request) {
-        log.error("Внутренняя ошибка сервера.", ex);
+        log.error("Internal server error.", ex);
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, request);
         body.put(REASONS, ex.getMessage());
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
