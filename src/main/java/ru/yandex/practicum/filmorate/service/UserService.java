@@ -53,18 +53,26 @@ public class UserService {
         }
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        log.info("Users with ids [{}, {}] are friends now.", userId, friendId);
-        user.getFriends().add(friendId);
-        friend.getFriends().add(userId);
+        boolean isAdded = user.getFriends().add(friendId);
+        if (isAdded) {
+            log.info("Users with ids [{}, {}] are friends now.", userId, friendId);
+            friend.getFriends().add(userId);
+        } else {
+            log.info("Users with ids [{}, {}] are friends already.", userId, friendId);
+        }
         return user;
     }
 
     public User removeFriend(Integer friendId, Integer userId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
-        log.info("Users with ids [{}, {}] are not friends now", userId, friendId);
-        user.getFriends().remove(friendId);
-        friend.getFriends().remove(userId);
+        boolean isRemoved = user.getFriends().remove(friendId);
+        if (isRemoved) {
+            log.info("Users with ids [{}, {}] are not friends now.", userId, friendId);
+            friend.getFriends().remove(userId);
+        } else {
+            log.info("Users with ids [{}, {}] have not been friends", userId, friendId);
+        }
         return user;
     }
 
