@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -11,6 +14,9 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+@SpringBootTest
+@AutoConfigureMockMvc
+@ComponentScan("ru.yandex.practicum.filmorate")
 abstract class AbstractControllerTest {
 
     protected final static String ERROR_MES_TEMPLATE
