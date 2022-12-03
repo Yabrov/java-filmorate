@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.MediaType;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
@@ -27,8 +25,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest({FilmController.class, UserController.class})
-@ComponentScan("ru.yandex.practicum.filmorate")
 public class FilmControllerTest extends AbstractControllerTest {
 
     @Autowired
@@ -496,5 +492,67 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.likesCount").value(1));
+    }
+
+    @Test
+    @DisplayName("Проверка невозможности добавления нескольких лайков фильму одним пользователем")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void impossibilityOfAddingManyLikesToFilmFromSingleUserTest() throws Exception {
+        MockHttpServletRequestBuilder builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(user));
+        // Creating user
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1));
+        builder = post("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(film));
+        // Creating film
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.likesCount").value(0));
+        builder = put("/films/{filmId}/like/{userId}", 1, 1);
+        // User likes film many times
+        for (int i = 0; i < 10; i++) {
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.likesCount").value(1));
+        }
+    }
+
+    @Test
+    @DisplayName("Проверка невозможности удаления нескольких лайков фильму одним пользователем")
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
+    void impossibilityOfRemovingManyLikesToFilmFromSingleUserTest() throws Exception {
+        MockHttpServletRequestBuilder builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(user));
+        // Creating user
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1));
+        builder = post("/films")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(film));
+        // Creating film
+        mockMvc.perform(builder)
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.likesCount").value(0));
+        builder = delete("/films/{filmId}/like/{userId}", 1, 1);
+        // User removes like from film many times
+        for (int i = 0; i < 10; i++) {
+            mockMvc.perform(builder)
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
+                    .andExpect(jsonPath("$.likesCount").value(0));
+        }
     }
 }
