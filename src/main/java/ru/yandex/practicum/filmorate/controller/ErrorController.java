@@ -33,7 +33,7 @@ public class ErrorController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = FilmNotFoundException.class)
     protected ResponseEntity<Object> filmNotFound(FilmNotFoundException ex, WebRequest request) {
-        log.error("Фильм с id={} не найден.", ex.getFilm().getId());
+        log.error(ex.getMessage());
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
         body.put(OBJECT, ex.getFilm());
         body.put(REASONS, Collections.singletonList(ex.getMessage()));
@@ -42,7 +42,7 @@ public class ErrorController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = UserNotFoundException.class)
     protected ResponseEntity<Object> userNotFound(UserNotFoundException ex, WebRequest request) {
-        log.error("Пользователь с id={} не найден.", ex.getUser().getId());
+        log.error(ex.getMessage());
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
         body.put(OBJECT, ex.getUser());
         body.put(REASONS, Collections.singletonList(ex.getMessage()));
@@ -51,7 +51,7 @@ public class ErrorController extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<Object> genericExceptionHandler(Exception ex, WebRequest request) {
-        log.error("Внутренняя ошибка сервера.", ex);
+        log.error("Internal server error.", ex);
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, request);
         body.put(REASONS, ex.getMessage());
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);

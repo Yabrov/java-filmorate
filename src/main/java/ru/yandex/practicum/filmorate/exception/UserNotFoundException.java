@@ -6,10 +6,17 @@ import ru.yandex.practicum.filmorate.model.User;
 @Getter
 public class UserNotFoundException extends RuntimeException {
 
+    private final static String MES_FORMAT = "User with id=%s does not exist.";
+
     private final User user;
 
     public UserNotFoundException(User user) {
-        super("User with id=" + user.getId() + " doesn't exist.");
+        super(String.format(MES_FORMAT, user.getId()));
         this.user = user;
+    }
+
+    public UserNotFoundException(Integer userId) {
+        super(String.format(MES_FORMAT, userId));
+        this.user = null;
     }
 }

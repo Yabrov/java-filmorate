@@ -16,6 +16,8 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Value
 @Builder
@@ -45,6 +47,10 @@ public class User {
     @JsonSerialize(using = LocalDateSerializer.class)
     @JsonDeserialize(using = LocalDateDeserializer.class)
     LocalDate birthday;
+
+    Set<Integer> friends = new HashSet<>();
+
+    Set<Integer> likedFilms = new HashSet<>();
 
     @JsonCreator
     public User(
