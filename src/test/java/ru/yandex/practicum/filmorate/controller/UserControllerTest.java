@@ -466,7 +466,7 @@ public class UserControllerTest extends AbstractControllerTest {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.likesCount").value(1));
+                    .andExpect(jsonPath("$.likedUsers.size()").value(1));
         }
         builder = put("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)

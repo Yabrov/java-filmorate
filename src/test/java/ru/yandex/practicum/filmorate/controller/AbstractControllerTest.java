@@ -4,18 +4,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@EnableAutoConfiguration(exclude = {
+        DataSourceTransactionManagerAutoConfiguration.class,
+        HibernateJpaAutoConfiguration.class
+})
 @ComponentScan("ru.yandex.practicum.filmorate")
 abstract class AbstractControllerTest {
 
@@ -34,6 +42,7 @@ abstract class AbstractControllerTest {
             .description("Film test descr")
             .duration(120)
             .releaseDate(LocalDate.of(2022, 11, 1))
+            .rating(new Rating(1, "R"))
             .build();
 
     protected final User user = User.builder()
