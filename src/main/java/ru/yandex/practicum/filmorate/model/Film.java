@@ -17,8 +17,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
-import java.util.Objects;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.HashSet;
+import java.util.Set;
 
 @Value
 @Builder
@@ -51,7 +51,12 @@ public class Film {
     @Positive
     Integer duration;
 
-    AtomicInteger likesCount = new AtomicInteger();
+    @With
+    Rating rating;
+
+    Set<Genre> genres = new HashSet<>();
+
+    Set<Integer> likedUsers = new HashSet<>();
 
     @JsonCreator
     public Film(
@@ -62,29 +67,14 @@ public class Film {
             @JsonSerialize(using = LocalDateSerializer.class)
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("releaseDate") LocalDate releaseDate,
-            @JsonProperty("duration") Integer duration) {
+            @JsonProperty("duration") Integer duration,
+            @JsonProperty("mpa") Rating rating) {
+        super();
         this.id = id;
         this.name = name;
         this.description = description;
         this.releaseDate = releaseDate;
         this.duration = duration;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Film)) return false;
-        Film film = (Film) o;
-        return Objects.equals(id, film.id)
-                && Objects.equals(name, film.name)
-                && Objects.equals(description, film.description)
-                && Objects.equals(releaseDate, film.releaseDate)
-                && Objects.equals(duration, film.duration)
-                && likesCount.get() == film.likesCount.get();
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, name, description, releaseDate, duration, likesCount.get());
+        this.rating = rating;
     }
 }
