@@ -1,17 +1,19 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.in_memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class InMemoryFilmRepository implements AbstractRepository<Film> {
+public class InMemoryFilmRepository implements AbstractRepository<Integer, Film> {
 
     private final Map<Integer, Film> films = new HashMap<>();
 
@@ -32,7 +34,8 @@ public class InMemoryFilmRepository implements AbstractRepository<Film> {
             throw new FilmNotFoundException(film);
         }
         log.info("Film with id={} has been updated.", film.getId());
-        film.getLikesCount().set(oldFilm.getLikesCount().get());
+        film.getLikedUsers().clear();
+        film.getLikedUsers().addAll(oldFilm.getLikedUsers());
         films.replace(film.getId(), oldFilm, film);
         return film;
     }
@@ -50,6 +53,11 @@ public class InMemoryFilmRepository implements AbstractRepository<Film> {
     @Override
     public Collection<Film> findAll() {
         return films.values();
+    }
+
+    @Override
+    public Collection<Film> findByIds(Collection<Integer> ids) {
+        return ids.stream().map(this::findById).collect(Collectors.toList());
     }
 
     private synchronized Integer getNextId() {

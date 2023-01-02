@@ -14,39 +14,44 @@ import java.util.stream.Collectors;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
-public class UserService {
+@Service("inMemoryUserService")
+public class InMemoryUserService implements AbstractUserService {
 
-    private final AbstractRepository<User> userRepository;
+    private final AbstractRepository<Integer, User> inMemoryUserRepository;
 
+    @Override
     public User getUserById(Integer userId) {
-        User user = userRepository.findById(userId);
+        User user = inMemoryUserRepository.findById(userId);
         if (user == null) {
             throw new UserNotFoundException(userId);
         }
         return user;
     }
 
+    @Override
     public User createUser(User user) {
         return isBlank(user.getName())
-                ? userRepository.save(user.withName(user.getLogin()))
-                : userRepository.save(user);
+                ? inMemoryUserRepository.save(user.withName(user.getLogin()))
+                : inMemoryUserRepository.save(user);
     }
 
+    @Override
     public User updateUser(User user) {
         if (user.getId() == null) {
             throw new UserNotFoundException(user);
         }
         return isBlank(user.getName())
-                ? userRepository.update(user.withName(user.getLogin()))
-                : userRepository.update(user);
+                ? inMemoryUserRepository.update(user.withName(user.getLogin()))
+                : inMemoryUserRepository.update(user);
     }
 
+    @Override
     public Iterable<User> getAllUsers() {
-        return userRepository.findAll();
+        return inMemoryUserRepository.findAll();
     }
 
+    @Override
     public User addFriend(Integer friendId, Integer userId) {
         if (friendId.equals(userId)) {
             throw new IllegalArgumentException("User must not be friend of himself.");
@@ -63,6 +68,7 @@ public class UserService {
         return user;
     }
 
+    @Override
     public User removeFriend(Integer friendId, Integer userId) {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
@@ -76,6 +82,7 @@ public class UserService {
         return user;
     }
 
+    @Override
     public Iterable<User> getMutualFriends(Integer id, Integer otherId) {
         User user = getUserById(id);
         User otherUser = getUserById(otherId);
@@ -83,15 +90,12 @@ public class UserService {
         mutualFriendsSet.retainAll(otherUser.getFriends());
         return mutualFriendsSet
                 .stream()
-                .map(userRepository::findById)
+                .map(inMemoryUserRepository::findById)
                 .collect(Collectors.toList());
     }
 
+    @Override
     public Iterable<User> getUserFriends(Integer userId) {
-        return getUserById(userId)
-                .getFriends()
-                .stream()
-                .map(userRepository::findById)
-                .collect(Collectors.toList());
+        return inMemoryUserRepository.findByIds(getUserById(userId).getFriends());
     }
 }

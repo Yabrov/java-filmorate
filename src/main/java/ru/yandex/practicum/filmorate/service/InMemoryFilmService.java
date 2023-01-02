@@ -12,67 +12,74 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Service
 @RequiredArgsConstructor
-public class FilmService {
+@Service("inMemoryFilmService")
+public class InMemoryFilmService implements AbstractFilmService {
 
     private static final Comparator<Film> filmPopularityComparator = Comparator
-            .comparing((Film film) -> film.getLikesCount().intValue()).reversed();
+            .comparing((Film film) -> film.getLikedUsers().size()).reversed();
 
-    private final AbstractRepository<Film> filmRepository;
-    private final UserService userService;
+    private final AbstractRepository<Integer, Film> inMemoryFilmRepository;
+    private final InMemoryUserService inMemoryUserService;
 
+    @Override
     public Film getFilmById(Integer filmId) {
-        Film film = filmRepository.findById(filmId);
+        Film film = inMemoryFilmRepository.findById(filmId);
         if (film == null) {
             throw new FilmNotFoundException(filmId);
         }
         return film;
     }
 
+    @Override
     public Film createFilm(Film film) {
-        return filmRepository.save(film);
+        return inMemoryFilmRepository.save(film);
     }
 
+    @Override
     public Film updateFilm(Film film) {
         if (film.getId() == null) {
             throw new FilmNotFoundException(film);
         }
-        return filmRepository.update(film);
+        return inMemoryFilmRepository.update(film);
     }
 
+    @Override
     public Iterable<Film> getAllFilms() {
-        return filmRepository.findAll();
+        return inMemoryFilmRepository.findAll();
     }
 
+    @Override
     public Film addLike(Integer userId, Integer filmId) {
-        User user = userService.getUserById(userId);
+        User user = inMemoryUserService.getUserById(userId);
         Film film = getFilmById(filmId);
         boolean isAdded = user.getLikedFilms().add(filmId);
         if (isAdded) {
             log.info("User with id={} has liked film '{}'.", user.getId(), film.getName());
-            film.getLikesCount().incrementAndGet();
+            film.getLikedUsers().add(user.getId());
         } else {
             log.info("User with id={} already has liked film '{}'.", user.getId(), film.getName());
         }
         return film;
     }
 
+    @Override
     public Film removeLike(Integer userId, Integer filmId) {
-        User user = userService.getUserById(userId);
+        User user = inMemoryUserService.getUserById(userId);
         Film film = getFilmById(filmId);
         boolean isRemoved = user.getLikedFilms().remove(filmId);
         if (isRemoved) {
             log.info("User with id={} has removed like from film '{}'.", user.getId(), film.getName());
-            film.getLikesCount().decrementAndGet();
+            film.getLikedUsers().remove(user.getId());
         } else {
             log.info("User with id={} has not liked film '{}'.", user.getId(), film.getName());
         }
         return film;
     }
 
+    @Override
     public Iterable<Film> getMostPopularFilms(int count) {
-        return filmRepository
+        return inMemoryFilmRepository
                 .findAll()
                 .stream()
                 .sorted(filmPopularityComparator)

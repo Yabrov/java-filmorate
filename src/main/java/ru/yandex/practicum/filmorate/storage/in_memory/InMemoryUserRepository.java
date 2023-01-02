@@ -1,17 +1,19 @@
-package ru.yandex.practicum.filmorate.storage;
+package ru.yandex.practicum.filmorate.storage.in_memory;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Repository
-public class InMemoryUserRepository implements AbstractRepository<User> {
+public class InMemoryUserRepository implements AbstractRepository<Integer, User> {
 
     private final Map<Integer, User> users = new ConcurrentHashMap<>();
 
@@ -51,6 +53,11 @@ public class InMemoryUserRepository implements AbstractRepository<User> {
     @Override
     public Collection<User> findAll() {
         return users.values();
+    }
+
+    @Override
+    public Collection<User> findByIds(Collection<Integer> ids) {
+        return ids.stream().map(this::findById).collect(Collectors.toList());
     }
 
     private synchronized Integer getNextId() {
