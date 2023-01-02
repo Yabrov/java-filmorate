@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.InMemoryFilmService;
 
 import javax.validation.Valid;
 
@@ -12,7 +12,7 @@ import javax.validation.Valid;
 @RequiredArgsConstructor
 public class FilmController {
 
-    private final FilmService filmService;
+    private final InMemoryFilmService filmService;
 
     private final static String DEFAULT_RATING_COUNT = "10";
 
