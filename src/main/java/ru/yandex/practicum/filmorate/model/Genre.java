@@ -24,8 +24,8 @@ public class Genre {
 
     @JsonCreator
     public Genre(
-            @JsonProperty("id") Integer id,
-            @JsonProperty("name") String name) {
+            @JsonProperty(value = "id", required = true) Integer id,
+            @JsonProperty(value = "name", defaultValue = "Мультфильм") String name) {
         this.id = id;
         this.name = name;
     }
