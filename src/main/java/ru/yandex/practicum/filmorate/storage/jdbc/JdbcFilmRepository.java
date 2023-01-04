@@ -18,27 +18,67 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Repository
 @RequiredArgsConstructor
-@Repository("jdbcFilmRepository")
 public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Film> filmMapper;
     private final RowMapper<Genre> genreMapper;
 
+    private static final String insertFilmSqlString = "" +
+            "INSERT INTO FILMS(name, description, release_date, duration, rating_id) " +
+            "VALUES(?, ?, CAST(? AS DATE), ?, ?)";
+
+    private static final String updateFilmSqlString = "" +
+            "UPDATE FILMS SET name = ?, description = ?, " +
+            "release_date = CAST(? AS DATE), duration = ?, rating_id = ?";
+
+    private static final String deleteFilmSqlString = "DELETE FROM FILMS WHERE id = ?";
+
+    private static final String deleteLikesSqlString = "DELETE FROM LIKES WHERE film_id = ?";
+
+    private static final String deleteFilmGenreSqlString = "DELETE FROM FILM_GENRE WHERE film_id = ?";
+
+    private static final String insertFilmGenreSqlString = "INSERT INTO FILM_GENRE(film_id, genre_id) VALUES (?, ?)";
+
+    private static final String findFilmByIdSqlString = "" +
+            "SELECT f.id, f.name, f.description, f.release_date, " +
+            "f.duration, r.id AS rating_id, r.name AS rating_name " +
+            "FROM FILMS f LEFT JOIN RATINGS r ON r.id = f.rating_id " +
+            "WHERE f.id = ?";
+
+    private static final String findAllFilmsSqlString = "" +
+            "SELECT f.id, f.name, f.description, f.release_date, " +
+            "f.duration, r.id AS rating_id, r.name AS rating_name " +
+            "FROM FILMS f LEFT JOIN RATINGS r ON r.id = f.rating_id";
+
+    private static final String findLikesByFilmIdSqlString = "SELECT l.user_id FROM LIKES l WHERE l.film_id = ?";
+
+    private static final String findGenresByFilmIdSqlString = "" +
+            "SELECT g.id, g.name FROM FILM_GENRE i " +
+            "LEFT JOIN GENRES g ON g.id = i.genre_id WHERE i.film_id = ?";
+
+    private static final String findTopPopularFilmsSqlString = "" +
+            "SELECT f.id, f.name, f.description, f.release_date, " +
+            "f.duration, r.id AS rating_id, r.name AS rating_name FROM (" +
+            "SELECT film_id, COUNT(*) AS cnt FROM LIKES " +
+            "GROUP BY film_id ORDER by cnt DESC LIMIT ?) p " +
+            "LEFT JOIN FILMS f ON f.id = p.film_id " +
+            "LEFT JOIN RATINGS r ON r.id = f.rating_id";
+
     @Override
     public Film save(Film film) {
-        String queryString = "INSERT INTO public.film(name, description, " +
-                "release_date, duration, rating_id) VALUES(?, ?, CAST(? AS DATE), ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(queryString, new String[]{"id"});
+                PreparedStatement stmt = connection
+                        .prepareStatement(insertFilmSqlString, new String[]{"id"});
                 stmt.setString(1, film.getName());
                 stmt.setString(2, film.getDescription());
                 stmt.setString(3, LocalDateConvertor.toSqlString(film.getReleaseDate()));
                 stmt.setInt(4, film.getDuration());
-                stmt.setInt(5, film.getRating().getId());
+                stmt.setInt(5, film.getRating() == null ? null : film.getRating().getId());
                 return stmt;
             }, keyHolder);
             return film.withId(keyHolder.getKey().intValue());
@@ -46,25 +86,29 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
             String mes = "Error when execute sql save for new film.";
             throw new JdbcQueryExecutionException(mes, e);
         } catch (NullPointerException e) {
-            String mes = "Returned id in null. New film has not been saved.";
+            String mes = "Returned id is null. New film has not been saved.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }
 
     @Override
     public Film update(Film film) {
-        String queryString = "UPDATE public.film SET name = ?, description = ?, " +
-                "release_date = CAST(? AS DATE), duration = ?, rating_id = ?";
         try {
             jdbcTemplate.update(
-                    queryString,
+                    updateFilmSqlString,
                     film.getName(),
                     film.getDescription(),
                     LocalDateConvertor.toSqlString(film.getReleaseDate()),
                     film.getDuration(),
-                    film.getRating().getId()
+                    film.getRating() == null ? null : film.getRating().getId()
             );
-            return film;
+            if (!film.getGenres().isEmpty()) {
+                jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
+                for (Genre genre : film.getGenres()) {
+                    jdbcTemplate.update(insertFilmGenreSqlString, film.getId(), genre.getId());
+                }
+            }
+            return findById(film.getId());
         } catch (DataAccessException e) {
             String mes = "Error when execute sql save for film with id=" + film.getId() + '.';
             throw new JdbcQueryExecutionException(mes, e);
@@ -73,14 +117,11 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
 
     @Override
     public Film delete(Film film) {
-        String filmQuery = "DELETE FROM public.film WHERE id = ?";
-        String likesQuery = "DELETE FROM public.likes_info WHERE film_id = ?";
-        String genresQuery = "DELETE FROM public.film_genres_info WHERE film_id = ?";
         try {
-            boolean isDeleted = jdbcTemplate.update(filmQuery, film.getId()) > 0;
+            boolean isDeleted = jdbcTemplate.update(deleteFilmSqlString, film.getId()) > 0;
             if (isDeleted) {
-                jdbcTemplate.update(likesQuery, film.getId());
-                jdbcTemplate.update(genresQuery, film.getId());
+                jdbcTemplate.update(deleteLikesSqlString, film.getId());
+                jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
                 return film;
             } else {
                 return null;
@@ -93,19 +134,13 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
 
     @Override
     public Film findById(Integer id) {
-        String filmQuery = "SELECT f.id, f.name, f.description, f.release_date, " +
-                "f.duration, r.id AS rating_id, r.name AS rating_name FROM public.film f " +
-                "LEFT JOIN public.rating r ON r.id = f.rating_id WHERE f.id = ?";
-        String likesQuery = "SELECT l.user_id FROM public.likes_info l WHERE l.film_id = ?";
-        String genreQuery = "SELECT g.id, g.name " +
-                "FROM public.film_genres_info i " +
-                "LEFT JOIN public.genre g ON g.id = i.genre_id " +
-                "WHERE i.film_id = ?";
         try {
-            Film film = jdbcTemplate.queryForObject(filmQuery, filmMapper, id);
+            Film film = jdbcTemplate.queryForObject(findFilmByIdSqlString, filmMapper, id);
             if (film != null) {
-                film.getLikedUsers().addAll(jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId()));
-                film.getGenres().addAll(jdbcTemplate.query(genreQuery, genreMapper, film.getId()));
+                film.getLikedUsers().addAll(jdbcTemplate
+                        .queryForList(findLikesByFilmIdSqlString, Integer.class, film.getId()));
+                film.getGenres().addAll(jdbcTemplate
+                        .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
             }
             return film;
         } catch (DataAccessException e) {
@@ -116,18 +151,13 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
 
     @Override
     public Collection<Film> findAll() {
-        String filmsQuery = "SELECT f.id, f.name, f.description, f.release_date, " +
-                "f.duration, f.rating_id FROM public.film f";
-        String likesQuery = "SELECT l.user_id FROM public.likes_info l WHERE l.film_id = ?";
-        String genreQuery = "SELECT g.id, g.name " +
-                "FROM public.film_genres_info i " +
-                "LEFT JOIN public.genre g ON g.id = i.genre_id " +
-                "WHERE i.film_id = ?";
         try {
-            List<Film> films = jdbcTemplate.query(filmsQuery, filmMapper);
+            List<Film> films = jdbcTemplate.query(findAllFilmsSqlString, filmMapper);
             for (Film film : films) {
-                film.getLikedUsers().addAll(jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId()));
-                film.getGenres().addAll(jdbcTemplate.query(genreQuery, genreMapper, film.getId()));
+                film.getLikedUsers().addAll(jdbcTemplate
+                        .queryForList(findLikesByFilmIdSqlString, Integer.class, film.getId()));
+                film.getGenres().addAll(jdbcTemplate
+                        .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
             }
             return films;
         } catch (DataAccessException e) {
@@ -140,22 +170,35 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
     public Collection<Film> findByIds(Collection<Integer> ids) {
         String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
         String filmsQuery = String.format(
-                "SELECT f.id, f.name, f.description, f.release_date, " +
-                        "f.duration, f.rating_id FROM public.film f WHERE f.id IN (%s)", inSql);
-        String likesQuery = "SELECT l.user_id FROM public.likes_info l WHERE l.film_id = ?";
-        String genreQuery = "SELECT g.id, g.name " +
-                "FROM public.film_genres_info i " +
-                "LEFT JOIN public.genre g ON g.id = i.genre_id " +
-                "WHERE i.film_id = ?";
+                "SELECT id, name, description, release_date, duration, rating_id FROM FILMS WHERE id IN (%s)", inSql);
         try {
             List<Film> films = jdbcTemplate.query(filmsQuery, ids.toArray(), filmMapper);
             for (Film film : films) {
-                film.getLikedUsers().addAll(jdbcTemplate.queryForList(likesQuery, Integer.class, film.getId()));
-                film.getGenres().addAll(jdbcTemplate.query(genreQuery, genreMapper, film.getId()));
+                film.getLikedUsers().addAll(jdbcTemplate
+                        .queryForList(findLikesByFilmIdSqlString, Integer.class, film.getId()));
+                film.getGenres().addAll(jdbcTemplate
+                        .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
             }
             return films;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for many films.";
+            throw new JdbcQueryExecutionException(mes, e);
+        }
+    }
+
+    @Override
+    public Collection<Film> findFirstNTopRows(Integer n) {
+        try {
+            List<Film> films = jdbcTemplate.query(findTopPopularFilmsSqlString, filmMapper, n);
+            for (Film film : films) {
+                film.getLikedUsers().addAll(jdbcTemplate
+                        .queryForList(findLikesByFilmIdSqlString, Integer.class, film.getId()));
+                film.getGenres().addAll(jdbcTemplate
+                        .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
+            }
+            return films;
+        } catch (DataAccessException e) {
+            String mes = "Error when execute sql select for popular films.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }

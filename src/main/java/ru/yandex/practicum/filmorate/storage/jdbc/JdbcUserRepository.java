@@ -17,21 +17,46 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+@Repository
 @RequiredArgsConstructor
-@Repository("jdbcUserRepository")
 public class JdbcUserRepository implements AbstractRepository<Integer, User> {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<User> userMapper;
 
+    private static final String insertUserSqlString =
+            "INSERT INTO USERS(email, login, name, birthday) VALUES(?, ?, ?, CAST(? AS DATE))";
+
+    private static final String updateUserSqlString =
+            "UPDATE USERS SET email = ?, login = ?, name = ?, birthday = CAST(? AS DATE) WHERE id = ?";
+
+    private static final String deleteUserSqlString = "DELETE FROM USERS WHERE id = ?";
+
+    private static final String deleteFilmsSqlString = "DELETE FROM LIKES WHERE user_id = ?";
+
+    private static final String deleteFriendsSqlString = "DELETE FROM FRIENDS WHERE ? IN (user_id, friend_id)";
+
+    private static final String findUserByIdSqlString =
+            "SELECT id, email, login, name, birthday FROM USERS WHERE id = ?";
+
+    private static final String findAllUserSqlString = "SELECT id, email, login, name, birthday FROM USERS";
+
+    private static final String findFriendsByUserIdSqlString = "SELECT friend_id FROM FRIENDS WHERE user_id = ?";
+
+    private static final String findFilmsByUserIdSqlString = "SELECT film_id FROM LIKES WHERE user_id = ?";
+
+    private static final String findTopPopularUsersSqlString = "" +
+            "SELECT u.id, u.email, u.login, u.name, u.birthday FROM (" +
+            "SELECT user_id, COUNT(*) AS cnt FROM FRIENDS " +
+            "GROUP BY user_id ORDER by cnt DESC LIMIT ?) f " +
+            "LEFT JOIN USERS u ON u.id = f.user_id";
+
     @Override
     public User save(User user) {
-        String queryString = "INSERT INTO public.user(email, login, name, birthday) " +
-                "VALUES(?, ?, ?, CAST(? AS DATE))";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(queryString, new String[]{"id"});
+                PreparedStatement stmt = connection.prepareStatement(insertUserSqlString, new String[]{"id"});
                 stmt.setString(1, user.getEmail());
                 stmt.setString(2, user.getLogin());
                 stmt.setString(3, user.getName());
@@ -43,25 +68,23 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
             String mes = "Error when execute sql save for new user.";
             throw new JdbcQueryExecutionException(mes, e);
         } catch (NullPointerException e) {
-            String mes = "Returned id in null. New user has not been saved.";
+            String mes = "Returned id is null. New user has not been saved.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }
 
     @Override
     public User update(User user) {
-        String queryString = "UPDATE public.user SET email = ?, login = ?, " +
-                "name = ?, birthday = CAST(? AS DATE)) WHERE id = ?";
         try {
             jdbcTemplate.update(
-                    queryString,
+                    updateUserSqlString,
                     user.getEmail(),
                     user.getLogin(),
                     user.getName(),
                     LocalDateConvertor.toSqlString(user.getBirthday()),
                     user.getId()
             );
-            return user;
+            return findById(user.getId());
         } catch (DataAccessException e) {
             String mes = "Error when execute sql save for user with id=" + user.getId() + '.';
             throw new JdbcQueryExecutionException(mes, e);
@@ -70,14 +93,11 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
 
     @Override
     public User delete(User user) {
-        String userQuery = "DELETE FROM public.user WHERE id = ?";
-        String friendsQuery = "DELETE FROM public.friendship_info WHERE ? IN (user_id, friend_id)";
-        String filmQuery = "DELETE FROM public.likes_info WHERE user_id = ?";
         try {
-            boolean isDeleted = jdbcTemplate.update(userQuery, user.getId()) > 0;
+            boolean isDeleted = jdbcTemplate.update(deleteUserSqlString, user.getId()) > 0;
             if (isDeleted) {
-                jdbcTemplate.update(friendsQuery, user.getId());
-                jdbcTemplate.update(filmQuery, user.getId());
+                jdbcTemplate.update(deleteFriendsSqlString, user.getId());
+                jdbcTemplate.update(deleteFilmsSqlString, user.getId());
                 return user;
             } else {
                 return null;
@@ -90,14 +110,13 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
 
     @Override
     public User findById(Integer id) {
-        String userQuery = "SELECT u.id, u.email, u.login, u.name, u.birthday FROM public.user u WHERE u.id = ?";
-        String friendsQuery = "SELECT f.friend_id FROM public.friendship_info f WHERE f.user_id = ?";
-        String filmsQuery = "SELECT l.film_id FROM public.likes_info l WHERE l.user_id = ?";
         try {
-            User user = jdbcTemplate.queryForObject(userQuery, userMapper, id);
+            User user = jdbcTemplate.queryForObject(findUserByIdSqlString, userMapper, id);
             if (user != null) {
-                user.getFriends().addAll(jdbcTemplate.queryForList(friendsQuery, Integer.class, user.getId()));
-                user.getLikedFilms().addAll(jdbcTemplate.queryForList(filmsQuery, Integer.class, user.getId()));
+                user.getFriends().addAll(jdbcTemplate
+                        .queryForList(findFriendsByUserIdSqlString, Integer.class, user.getId()));
+                user.getLikedFilms().addAll(jdbcTemplate
+                        .queryForList(findFilmsByUserIdSqlString, Integer.class, user.getId()));
             }
             return user;
         } catch (DataAccessException e) {
@@ -108,14 +127,13 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
 
     @Override
     public Collection<User> findAll() {
-        String userQuery = "SELECT u.id, u.email, u.login, u.name, u.birthday FROM public.user u";
-        String friendsQuery = "SELECT f.friend_id FROM public.friendship_info f WHERE f.user_id = ?";
-        String filmsQuery = "SELECT l.film_id FROM public.likes_info l WHERE l.user_id = ?";
         try {
-            List<User> users = jdbcTemplate.query(userQuery, userMapper);
+            List<User> users = jdbcTemplate.query(findAllUserSqlString, userMapper);
             for (User user : users) {
-                user.getFriends().addAll(jdbcTemplate.queryForList(friendsQuery, Integer.class, user.getId()));
-                user.getLikedFilms().addAll(jdbcTemplate.queryForList(filmsQuery, Integer.class, user.getId()));
+                user.getFriends().addAll(jdbcTemplate
+                        .queryForList(findFriendsByUserIdSqlString, Integer.class, user.getId()));
+                user.getLikedFilms().addAll(jdbcTemplate
+                        .queryForList(findFilmsByUserIdSqlString, Integer.class, user.getId()));
             }
             return users;
         } catch (DataAccessException e) {
@@ -128,18 +146,35 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
     public Collection<User> findByIds(Collection<Integer> ids) {
         String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
         String userQuery = String.format(
-                "SELECT u.id, u.email, u.login, u.name, u.birthday FROM public.user u WHERE u.id IN (%s)", inSql);
-        String friendsQuery = "SELECT f.friend_id FROM public.friendship_info f WHERE f.user_id = ?";
-        String filmsQuery = "SELECT l.film_id FROM public.likes_info l WHERE l.user_id = ?";
+                "SELECT id, email, login, name, birthday FROM USERS WHERE id IN (%s)", inSql);
         try {
             List<User> users = jdbcTemplate.query(userQuery, ids.toArray(), userMapper);
             for (User user : users) {
-                user.getFriends().addAll(jdbcTemplate.queryForList(friendsQuery, Integer.class, user.getId()));
-                user.getLikedFilms().addAll(jdbcTemplate.queryForList(filmsQuery, Integer.class, user.getId()));
+                user.getFriends().addAll(jdbcTemplate
+                        .queryForList(findFriendsByUserIdSqlString, Integer.class, user.getId()));
+                user.getLikedFilms().addAll(jdbcTemplate
+                        .queryForList(findFilmsByUserIdSqlString, Integer.class, user.getId()));
             }
             return users;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for many users.";
+            throw new JdbcQueryExecutionException(mes, e);
+        }
+    }
+
+    @Override
+    public Collection<User> findFirstNTopRows(Integer n) {
+        try {
+            List<User> users = jdbcTemplate.query(findTopPopularUsersSqlString, userMapper, n);
+            for (User user : users) {
+                user.getFriends().addAll(jdbcTemplate
+                        .queryForList(findFriendsByUserIdSqlString, Integer.class, user.getId()));
+                user.getLikedFilms().addAll(jdbcTemplate
+                        .queryForList(findFilmsByUserIdSqlString, Integer.class, user.getId()));
+            }
+            return users;
+        } catch (DataAccessException e) {
+            String mes = "Error when execute sql select for popular users.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }

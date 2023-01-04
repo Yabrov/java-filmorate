@@ -15,20 +15,38 @@ import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.Collections;
 
+@Repository
 @RequiredArgsConstructor
-@Repository("jdbcGenreRepository")
 public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
 
     private final JdbcTemplate jdbcTemplate;
     private final RowMapper<Genre> genreMapper;
 
+    private static final String insertGenreSqlString = "INSERT INTO GENRES(name) VALUES(?)";
+
+    private static final String updateGenreSqlString = "UPDATE GENRES SET name = ? WHERE id = ?";
+
+    private static final String deleteGenreSqlString = "DELETE FROM GENRES WHERE id = ?";
+
+    private static final String deleteFilmGenreSqlString = "DELETE FROM FILM_GENRE WHERE genre_id = ?";
+
+    private static final String findGenreByIdSqlString = "SELECT id, name FROM GENRES WHERE id = ?";
+
+    private static final String findAllGenresSqlString = "SELECT id, name FROM GENRES WHERE id = ?";
+
+    private static final String findTopPopularGenresSqlString = "" +
+            "SELECT g.id, g.name FROM (" +
+            "SELECT genre_id, COUNT(*) AS cnt FROM FILM_GENRE " +
+            "GROUP BY genre_id ORDER by cnt DESC LIMIT ?) r " +
+            "LEFT JOIN GENRES g ON g.id = r.genre_id";
+
     @Override
     public Genre save(Genre genre) {
-        String queryString = "INSERT INTO public.genre(name) VALUES(?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
         try {
             jdbcTemplate.update(connection -> {
-                PreparedStatement stmt = connection.prepareStatement(queryString, new String[]{"id"});
+                PreparedStatement stmt = connection
+                        .prepareStatement(insertGenreSqlString, new String[]{"id"});
                 stmt.setString(1, genre.getName());
                 return stmt;
             }, keyHolder);
@@ -37,16 +55,15 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
             String mes = "Error when execute sql save for new genre.";
             throw new JdbcQueryExecutionException(mes, e);
         } catch (NullPointerException e) {
-            String mes = "Returned id in null. New genre has not been saved.";
+            String mes = "Returned id is null. New genre has not been saved.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }
 
     @Override
     public Genre update(Genre genre) {
-        String queryString = "UPDATE public.genre SET name = ? WHERE id = ?";
         try {
-            jdbcTemplate.update(queryString, genre.getName(), genre.getId());
+            jdbcTemplate.update(updateGenreSqlString, genre.getName(), genre.getId());
             return genre;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql save for genre with id=" + genre.getId() + '.';
@@ -56,12 +73,10 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
 
     @Override
     public Genre delete(Genre genre) {
-        String genreQuery = "DELETE FROM public.genre WHERE id = ?";
-        String genreInfoQuery = "DELETE FROM public.film_genres_info WHERE genre_id = ?";
         try {
-            boolean isDeleted = jdbcTemplate.update(genreQuery, genre.getId()) > 0;
+            boolean isDeleted = jdbcTemplate.update(deleteGenreSqlString, genre.getId()) > 0;
             if (isDeleted) {
-                jdbcTemplate.update(genreInfoQuery, genre.getId());
+                jdbcTemplate.update(deleteFilmGenreSqlString, genre.getId());
                 return genre;
             } else {
                 return null;
@@ -74,9 +89,8 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
 
     @Override
     public Genre findById(Integer id) {
-        String genreQuery = "SELECT g.id, g.name FROM public.genre g WHERE g.id = ?";
         try {
-            return jdbcTemplate.queryForObject(genreQuery, genreMapper, id);
+            return jdbcTemplate.queryForObject(findGenreByIdSqlString, genreMapper, id);
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for genre with id=" + id + '.';
             throw new JdbcQueryExecutionException(mes, e);
@@ -85,9 +99,8 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
 
     @Override
     public Collection<Genre> findAll() {
-        String genreQuery = "SELECT g.id, g.name FROM public.genre g";
         try {
-            return jdbcTemplate.query(genreQuery, genreMapper);
+            return jdbcTemplate.query(findAllGenresSqlString, genreMapper);
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for all genres.";
             throw new JdbcQueryExecutionException(mes, e);
@@ -97,11 +110,21 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
     @Override
     public Collection<Genre> findByIds(Collection<Integer> ids) {
         String inSql = String.join(",", Collections.nCopies(ids.size(), "?"));
-        String userQuery = String.format("SELECT g.id, g.name FROM public.genre g WHERE g.id IN (%s)", inSql);
+        String userQuery = String.format("SELECT id, name FROM GENRES WHERE id IN (%s)", inSql);
         try {
             return jdbcTemplate.query(userQuery, ids.toArray(), genreMapper);
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for many genres.";
+            throw new JdbcQueryExecutionException(mes, e);
+        }
+    }
+
+    @Override
+    public Collection<Genre> findFirstNTopRows(Integer n) {
+        try {
+            return jdbcTemplate.query(findTopPopularGenresSqlString, genreMapper, n);
+        } catch (DataAccessException e) {
+            String mes = "Error when execute sql select for popular genres.";
             throw new JdbcQueryExecutionException(mes, e);
         }
     }
