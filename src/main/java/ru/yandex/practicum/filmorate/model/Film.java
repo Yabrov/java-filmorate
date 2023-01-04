@@ -18,6 +18,7 @@ import javax.validation.constraints.Positive;
 import javax.validation.constraints.Size;
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 @Value
@@ -54,7 +55,7 @@ public class Film {
     @With
     Rating rating;
 
-    Set<Genre> genres = new HashSet<>();
+    Set<Genre> genres;
 
     Set<Integer> likedUsers = new HashSet<>();
 
@@ -68,7 +69,8 @@ public class Film {
             @JsonDeserialize(using = LocalDateDeserializer.class)
             @JsonProperty("releaseDate") LocalDate releaseDate,
             @JsonProperty("duration") Integer duration,
-            @JsonProperty("mpa") Rating rating) {
+            @JsonProperty("mpa") Rating rating,
+            @JsonProperty("genres") Set<Genre> genres) {
         super();
         this.id = id;
         this.name = name;
@@ -76,5 +78,6 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.rating = rating;
+        this.genres = Objects.requireNonNullElseGet(genres, HashSet::new);
     }
 }
