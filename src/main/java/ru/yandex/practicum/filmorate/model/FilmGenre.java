@@ -1,21 +1,19 @@
 package ru.yandex.practicum.filmorate.model;
 
-import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 
 import javax.validation.constraints.NotNull;
 
 @Value
-@Builder
 @NotNull
-public class FriendshipInfo {
+public class FilmGenre {
 
     @With
     @NotNull
-    Integer userId;
+    Integer filmId;
 
     @With
     @NotNull
-    Integer friendId;
+    Integer genreId;
 }
