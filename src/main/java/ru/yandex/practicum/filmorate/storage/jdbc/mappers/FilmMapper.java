@@ -23,6 +23,10 @@ public class FilmMapper implements RowMapper<Film> {
         String ratingName = rs.getString("rating_name");
         LocalDate releaseDate = LocalDateConvertor
                 .fromSqlString(rs.getString("release_date"));
-        return new Film(id, name, description, releaseDate, duration, new Rating(ratingId, ratingName));
+        Rating rating = null;
+        if (ratingId != 0 || ratingName != null) {
+            rating = new Rating(ratingId, ratingName);
+        }
+        return new Film(id, name, description, releaseDate, duration, rating, null);
     }
 }
