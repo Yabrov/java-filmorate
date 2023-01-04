@@ -15,4 +15,6 @@ public interface AbstractRepository<R, T> {
     Collection<T> findAll();
 
     Collection<T> findByIds(Collection<R> ids);
+
+    Collection<T> findFirstNTopRows(Integer n);
 }
