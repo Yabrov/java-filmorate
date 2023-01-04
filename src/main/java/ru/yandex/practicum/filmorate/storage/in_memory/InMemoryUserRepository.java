@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -58,6 +59,11 @@ public class InMemoryUserRepository implements AbstractRepository<Integer, User>
     @Override
     public Collection<User> findByIds(Collection<Integer> ids) {
         return ids.stream().map(this::findById).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<User> findFirstNTopRows(Integer n) {
+        return Collections.emptyList();
     }
 
     private synchronized Integer getNextId() {

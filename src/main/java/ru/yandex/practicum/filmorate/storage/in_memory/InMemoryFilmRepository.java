@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -58,6 +59,11 @@ public class InMemoryFilmRepository implements AbstractRepository<Integer, Film>
     @Override
     public Collection<Film> findByIds(Collection<Integer> ids) {
         return ids.stream().map(this::findById).collect(Collectors.toList());
+    }
+
+    @Override
+    public Collection<Film> findFirstNTopRows(Integer n) {
+        return Collections.emptyList();
     }
 
     private synchronized Integer getNextId() {
