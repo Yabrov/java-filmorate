@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 
 @Value
 @Builder
-@NotNull
 public class Rating {
 
     @With
@@ -24,8 +23,8 @@ public class Rating {
 
     @JsonCreator
     public Rating(
-            @JsonProperty("id") Integer id,
-            @JsonProperty("name") String name) {
+            @JsonProperty(value = "id", required = true) Integer id,
+            @JsonProperty(value = "name", defaultValue = "R") String name) {
         this.id = id;
         this.name = name;
     }
