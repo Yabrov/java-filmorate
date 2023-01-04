@@ -1,18 +1,13 @@
 package ru.yandex.practicum.filmorate.config;
 
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 @Configuration
-@EnableTransactionManagement
 @ComponentScan("ru.yandex.practicum.filmorate")
 public class DataSourceConfiguration {
 
@@ -29,27 +24,13 @@ public class DataSourceConfiguration {
     private String JDBC_DRIVER;
 
     @Bean
-    public HikariConfig hikariConfig() {
-        HikariConfig config = new HikariConfig();
-        config.setJdbcUrl(JDBC_URL);
-        config.setUsername(JDBC_USERNAME);
-        config.setPassword(JDBC_PASSWORD);
-        config.setDriverClassName(JDBC_DRIVER);
-        return config;
-    }
-
-    @Bean
-    public HikariDataSource dataSource() {
-        return new HikariDataSource(hikariConfig());
-    }
-
-    @Bean
     public JdbcTemplate getTemplate() {
-        return new JdbcTemplate(dataSource());
-    }
-
-    @Bean
-    PlatformTransactionManager transactionManager() {
-        return new DataSourceTransactionManager(dataSource());
+        DriverManagerDataSource dataSource = new DriverManagerDataSource();
+        dataSource.setDriverClassName(JDBC_DRIVER);
+        dataSource.setUrl(JDBC_URL);
+        dataSource.setUsername(JDBC_USERNAME);
+        dataSource.setPassword(JDBC_PASSWORD);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        return jdbcTemplate;
     }
 }
