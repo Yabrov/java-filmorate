@@ -19,4 +19,6 @@ public interface AbstractUserService {
     Iterable<User> getMutualFriends(Integer id, Integer otherId);
 
     Iterable<User> getUserFriends(Integer userId);
+
+    Integer deleteUser(User user);
 }

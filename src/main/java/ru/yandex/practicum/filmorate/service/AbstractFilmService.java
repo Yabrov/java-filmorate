@@ -17,4 +17,6 @@ public interface AbstractFilmService {
     Film removeLike(Integer userId, Integer filmId);
 
     Iterable<Film> getMostPopularFilms(int count);
+
+    Integer deleteFilm(Film film);
 }
