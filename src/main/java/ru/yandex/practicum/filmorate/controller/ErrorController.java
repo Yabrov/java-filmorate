@@ -12,9 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.JdbcQueryExecutionException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
@@ -57,6 +55,24 @@ public class ErrorController extends ResponseEntityExceptionHandler {
         log.error(ex.getMessage());
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
         body.put(OBJECT, ex.getUser());
+        body.put(REASONS, Collections.singletonList(ex.getMessage()));
+        return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(value = GenreNotFoundException.class)
+    protected ResponseEntity<Object> genreNotFound(GenreNotFoundException ex, WebRequest request) {
+        log.error(ex.getMessage());
+        Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
+        body.put(OBJECT, ex.getGenre());
+        body.put(REASONS, Collections.singletonList(ex.getMessage()));
+        return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(value = RatingNotFoundException.class)
+    protected ResponseEntity<Object> ratingNotFound(RatingNotFoundException ex, WebRequest request) {
+        log.error(ex.getMessage());
+        Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
+        body.put(OBJECT, ex.getRating());
         body.put(REASONS, Collections.singletonList(ex.getMessage()));
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
