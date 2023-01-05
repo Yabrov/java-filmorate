@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 @Value
 @Builder
@@ -17,15 +16,26 @@ public class Rating {
     Integer id;
 
     @With
-    @NotNull
-    @NotBlank
     String name;
 
     @JsonCreator
     public Rating(
             @JsonProperty(value = "id", required = true) Integer id,
-            @JsonProperty(value = "name", defaultValue = "R") String name) {
+            @JsonProperty("name") String name) {
         this.id = id;
         this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Rating)) return false;
+        Rating rating = (Rating) o;
+        return Objects.equals(id, rating.id) && Objects.equals(name, rating.name);
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
     }
 }
