@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 @Getter
 public class FilmNotFoundException extends RuntimeException {
 
-    private final static String MES_FORMAT = "Film with id=%s does not exist.";
+    private static final String MES_FORMAT = "Film with id=%s does not exist.";
 
     private final Film film;
 
