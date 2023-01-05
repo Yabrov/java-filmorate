@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.jdbc;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import ru.yandex.practicum.filmorate.exception.JdbcQueryExecutionException;
@@ -90,11 +91,9 @@ public class JdbcFriendsRepository implements AbstractRepository<Friends, Friend
                     String.class,
                     userId,
                     friendId);
-            if (statusString == null) {
-                return null;
-            } else {
-                return friends.withStatus(FriendsStatus.valueOf(statusString));
-            }
+            return friends.withStatus(FriendsStatus.valueOf(statusString));
+        } catch (EmptyResultDataAccessException e) {
+            return null;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for friends (" + userId + ", " + friendId + ").";
             throw new JdbcQueryExecutionException(mes, e);

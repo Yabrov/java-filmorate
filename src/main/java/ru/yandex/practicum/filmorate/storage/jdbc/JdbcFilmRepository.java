@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.jdbc;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -14,6 +15,7 @@ import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 import ru.yandex.practicum.filmorate.utils.LocalDateConvertor;
 
 import java.sql.PreparedStatement;
+import java.sql.Types;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,7 +34,8 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
 
     private static final String updateFilmSqlString = "" +
             "UPDATE FILMS SET name = ?, description = ?, " +
-            "release_date = CAST(? AS DATE), duration = ?, rating_id = ?";
+            "release_date = CAST(? AS DATE), duration = ?, rating_id = ? " +
+            "WHERE id = ?";
 
     private static final String deleteFilmSqlString = "DELETE FROM FILMS WHERE id = ?";
 
@@ -78,7 +81,11 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                 stmt.setString(2, film.getDescription());
                 stmt.setString(3, LocalDateConvertor.toSqlString(film.getReleaseDate()));
                 stmt.setInt(4, film.getDuration());
-                stmt.setInt(5, film.getRating() == null ? null : film.getRating().getId());
+                if (film.getRating() == null) {
+                    stmt.setInt(5, Types.INTEGER);
+                } else {
+                    stmt.setInt(5, film.getRating().getId());
+                }
                 return stmt;
             }, keyHolder);
             return film.withId(keyHolder.getKey().intValue());
@@ -100,10 +107,11 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                     film.getDescription(),
                     LocalDateConvertor.toSqlString(film.getReleaseDate()),
                     film.getDuration(),
-                    film.getRating() == null ? null : film.getRating().getId()
+                    film.getRating() == null ? Types.INTEGER : film.getRating().getId(),
+                    film.getId()
             );
+            jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
             if (!film.getGenres().isEmpty()) {
-                jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
                 for (Genre genre : film.getGenres()) {
                     jdbcTemplate.update(insertFilmGenreSqlString, film.getId(), genre.getId());
                 }
@@ -143,6 +151,8 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                         .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
             }
             return film;
+        } catch (EmptyResultDataAccessException e) {
+            return null;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for film with id=" + id + '.';
             throw new JdbcQueryExecutionException(mes, e);

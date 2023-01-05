@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.storage.jdbc;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -32,7 +33,7 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
 
     private static final String findGenreByIdSqlString = "SELECT id, name FROM GENRES WHERE id = ?";
 
-    private static final String findAllGenresSqlString = "SELECT id, name FROM GENRES WHERE id = ?";
+    private static final String findAllGenresSqlString = "SELECT id, name FROM GENRES";
 
     private static final String findTopPopularGenresSqlString = "" +
             "SELECT g.id, g.name FROM (" +
@@ -91,6 +92,8 @@ public class JdbcGenreRepository implements AbstractRepository<Integer, Genre> {
     public Genre findById(Integer id) {
         try {
             return jdbcTemplate.queryForObject(findGenreByIdSqlString, genreMapper, id);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for genre with id=" + id + '.';
             throw new JdbcQueryExecutionException(mes, e);
