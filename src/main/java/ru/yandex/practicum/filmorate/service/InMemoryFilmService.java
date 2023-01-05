@@ -12,8 +12,8 @@ import java.util.Comparator;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
-@Service("inMemoryFilmService")
 public class InMemoryFilmService implements AbstractFilmService {
 
     private static final Comparator<Film> filmPopularityComparator = Comparator
@@ -85,5 +85,15 @@ public class InMemoryFilmService implements AbstractFilmService {
                 .sorted(filmPopularityComparator)
                 .limit(count)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public Integer deleteFilm(Film film) {
+        Film deletedFilm = inMemoryFilmRepository.delete(film);
+        if (deletedFilm == null) {
+            throw new FilmNotFoundException(film);
+        } else {
+            return film.getId();
+        }
     }
 }

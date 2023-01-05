@@ -14,8 +14,8 @@ import java.util.stream.Collectors;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
+@Service
 @RequiredArgsConstructor
-@Service("inMemoryUserService")
 public class InMemoryUserService implements AbstractUserService {
 
     private final AbstractRepository<Integer, User> inMemoryUserRepository;
@@ -97,5 +97,15 @@ public class InMemoryUserService implements AbstractUserService {
     @Override
     public Iterable<User> getUserFriends(Integer userId) {
         return inMemoryUserRepository.findByIds(getUserById(userId).getFriends());
+    }
+
+    @Override
+    public Integer deleteUser(User user) {
+        User deletedUser = inMemoryUserRepository.delete(user);
+        if (deletedUser == null) {
+            throw new UserNotFoundException(user);
+        } else {
+            return deletedUser.getId();
+        }
     }
 }
