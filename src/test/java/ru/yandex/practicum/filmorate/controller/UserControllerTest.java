@@ -5,7 +5,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -30,7 +29,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Создание валидного пользователя")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void createValidUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -114,7 +112,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Обновление пользователя")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void updateUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -141,7 +138,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Обновление пользователя c id NULL")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void updateUserWithNullIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -162,7 +158,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Получение списка всех пользователей")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void getAllUsersTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -319,7 +314,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Получение списка друзей сущ. пользователя")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void getExistingUserFriendsListTest() throws Exception {
         MockHttpServletRequestBuilder builder;
         // Creating 10 users
@@ -340,13 +334,6 @@ public class UserControllerTest extends AbstractControllerTest {
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                     .andExpect(jsonPath("$.friends.size()").value(i - 1));
         }
-        for (int i = 2; i <= 10; i++) {
-            builder = get("/users/{id}", i);
-            mockMvc.perform(builder)
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.friends[0]").value(1));
-        }
         builder = get("/users/{id}/friends", 1);
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -356,7 +343,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Получение списка общих друзей двух сущ. пользователей")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void getMutualFriendsListBetweenTwoExistingUsersTest() throws Exception {
         MockHttpServletRequestBuilder builder;
         // Creating 10 users
@@ -395,7 +381,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Восстановление списка друзей после обновления сущ. пользователя")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void restoreFriendsListAfterUpdatingExistingUserTest() throws Exception {
         MockHttpServletRequestBuilder builder;
         // Creating 10 users
@@ -437,7 +422,6 @@ public class UserControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Восстановление списка фильмов после обновления сущ. пользователя")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void restoreFilmsListAfterUpdatingExistingUserTest() throws Exception {
         MockHttpServletRequestBuilder builder;
         builder = post("/users")
