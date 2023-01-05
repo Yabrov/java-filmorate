@@ -1,18 +1,23 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.InMemoryFilmService;
+import ru.yandex.practicum.filmorate.service.AbstractFilmService;
 
 import javax.validation.Valid;
 
 @RestController
-@RequiredArgsConstructor
 public class FilmController {
 
-    private final InMemoryFilmService filmService;
+    private final AbstractFilmService filmService;
+
+    @Autowired
+    public FilmController(@Qualifier("jdbcFilmService") AbstractFilmService filmService) {
+        this.filmService = filmService;
+    }
 
     private final static String DEFAULT_RATING_COUNT = "10";
 

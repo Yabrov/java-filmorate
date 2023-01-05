@@ -1,18 +1,23 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.InMemoryUserService;
+import ru.yandex.practicum.filmorate.service.AbstractUserService;
 
 import javax.validation.Valid;
 
 @RestController
-@RequiredArgsConstructor
 public class UserController {
 
-    private final InMemoryUserService userService;
+    private final AbstractUserService userService;
+
+    @Autowired
+    public UserController(@Qualifier("jdbcUserService") AbstractUserService userService) {
+        this.userService = userService;
+    }
 
     @GetMapping(value = "/users/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public User getUser(@PathVariable Integer id) {
