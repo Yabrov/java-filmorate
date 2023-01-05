@@ -10,6 +10,7 @@ import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabas
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -23,6 +24,10 @@ import java.time.LocalDate;
 @EnableAutoConfiguration(exclude = {
         DataSourceTransactionManagerAutoConfiguration.class
 })
+@Sql(
+        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
+        scripts = {"classpath:schema.sql", "classpath:data.sql"}
+)
 @ComponentScan("ru.yandex.practicum.filmorate")
 abstract class AbstractControllerTest {
 
