@@ -20,8 +20,13 @@ public class Genre {
 
     @JsonCreator
     public Genre(
-            @JsonProperty(value = "id", required = true) Integer id,
-            @JsonProperty("name") String name) {
+            @JsonProperty(
+                    value = "id",
+                    required = true
+            )
+            Integer id,
+            @JsonProperty("name")
+            String name) {
         this.id = id;
         this.name = name;
     }
@@ -31,7 +36,8 @@ public class Genre {
         if (this == o) return true;
         if (!(o instanceof Genre)) return false;
         Genre genre = (Genre) o;
-        return Objects.equals(id, genre.id) && Objects.equals(name, genre.name);
+        return Objects.equals(id, genre.id)
+                && Objects.equals(name, genre.name);
     }
 
     @Override
