@@ -95,10 +95,10 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
     @Override
     public User delete(User user) {
         try {
+            jdbcTemplate.update(deleteFriendsSqlString, user.getId());
+            jdbcTemplate.update(deleteFilmsSqlString, user.getId());
             boolean isDeleted = jdbcTemplate.update(deleteUserSqlString, user.getId()) > 0;
             if (isDeleted) {
-                jdbcTemplate.update(deleteFriendsSqlString, user.getId());
-                jdbcTemplate.update(deleteFilmsSqlString, user.getId());
                 return user;
             } else {
                 return null;

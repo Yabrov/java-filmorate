@@ -88,6 +88,12 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                 }
                 return stmt;
             }, keyHolder);
+            Integer newId = keyHolder.getKey().intValue();
+            if (!film.getGenres().isEmpty()) {
+                for (Genre genre : film.getGenres()) {
+                    jdbcTemplate.update(insertFilmGenreSqlString, newId, genre.getId());
+                }
+            }
             return film.withId(keyHolder.getKey().intValue());
         } catch (DataAccessException e) {
             String mes = "Error when execute sql save for new film.";
@@ -126,10 +132,10 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
     @Override
     public Film delete(Film film) {
         try {
+            jdbcTemplate.update(deleteLikesSqlString, film.getId());
+            jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
             boolean isDeleted = jdbcTemplate.update(deleteFilmSqlString, film.getId()) > 0;
             if (isDeleted) {
-                jdbcTemplate.update(deleteLikesSqlString, film.getId());
-                jdbcTemplate.update(deleteFilmGenreSqlString, film.getId());
                 return film;
             } else {
                 return null;
