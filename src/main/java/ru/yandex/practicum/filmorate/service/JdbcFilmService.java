@@ -54,8 +54,7 @@ public class JdbcFilmService implements AbstractFilmService {
         User user = jdbcUserService.getUserById(userId);
         Film film = getFilmById(filmId);
         Likes like = new Likes(userId, filmId);
-        if (jdbcLikesRepository.findById(like) == null) {
-            jdbcLikesRepository.save(like);
+        if (jdbcLikesRepository.save(like) != null) {
             film.getLikedUsers().add(user.getId());
             log.info("User with id={} has liked film '{}'.", user.getId(), film.getName());
         } else {
