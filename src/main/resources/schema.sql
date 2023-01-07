@@ -13,7 +13,8 @@ CREATE TABLE IF NOT EXISTS USERS
     login    varchar                              NOT NULL,
     name     varchar,
     birthday date                                 NOT NULL,
-    PRIMARY KEY (id)
+    PRIMARY KEY (id),
+    CONSTRAINT unique_login UNIQUE (login)
 );
 
 CREATE TABLE IF NOT EXISTS RATINGS
@@ -46,7 +47,7 @@ CREATE TABLE IF NOT EXISTS GENRES
 CREATE TABLE IF NOT EXISTS FRIENDS
 (
     user_id   int     NOT NULL,
-    friend_id varchar NOT NULL,
+    friend_id int     NOT NULL,
     status    varchar NOT NULL,
     PRIMARY KEY (user_id, friend_id),
     CONSTRAINT friendship_info_user_fkey FOREIGN KEY (user_id)
