@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -9,21 +10,27 @@ import ru.yandex.practicum.filmorate.model.Likes;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
-import java.util.Collection;
-import java.util.stream.Collectors;
-
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class JdbcFilmService implements AbstractFilmService {
+public class FilmServiceImpl implements FilmService {
 
-    private final AbstractRepository<Integer, Film> jdbcFilmRepository;
-    private final AbstractRepository<Likes, Likes> jdbcLikesRepository;
-    private final AbstractUserService jdbcUserService;
+    private final AbstractRepository<Integer, Film> filmRepository;
+    private final AbstractRepository<Likes, Likes> likesRepository;
+    private final UserService userService;
+
+    @Autowired
+    public FilmServiceImpl(
+            @Qualifier("jdbcFilmRepository") AbstractRepository<Integer, Film> filmRepository,
+            @Qualifier("jdbcLikesRepository") AbstractRepository<Likes, Likes> likesRepository,
+            @Qualifier("userServiceImpl") UserService userService) {
+        this.filmRepository = filmRepository;
+        this.likesRepository = likesRepository;
+        this.userService = userService;
+    }
 
     @Override
     public Film getFilmById(Integer filmId) {
-        Film film = jdbcFilmRepository.findById(filmId);
+        Film film = filmRepository.findById(filmId);
         if (film == null) {
             throw new FilmNotFoundException(filmId);
         }
@@ -32,7 +39,7 @@ public class JdbcFilmService implements AbstractFilmService {
 
     @Override
     public Film createFilm(Film film) {
-        Film createdFilm = jdbcFilmRepository.save(film);
+        Film createdFilm = filmRepository.save(film);
         return updateFilm(createdFilm);
     }
 
@@ -41,20 +48,20 @@ public class JdbcFilmService implements AbstractFilmService {
         if (film.getId() == null || getFilmById(film.getId()) == null) {
             throw new FilmNotFoundException(film);
         }
-        return jdbcFilmRepository.update(film);
+        return filmRepository.update(film);
     }
 
     @Override
     public Iterable<Film> getAllFilms() {
-        return jdbcFilmRepository.findAll();
+        return filmRepository.findAll();
     }
 
     @Override
     public Film addLike(Integer userId, Integer filmId) {
-        User user = jdbcUserService.getUserById(userId);
+        User user = userService.getUserById(userId);
         Film film = getFilmById(filmId);
         Likes like = new Likes(userId, filmId);
-        if (jdbcLikesRepository.save(like) != null) {
+        if (likesRepository.save(like) != null) {
             film.getLikedUsers().add(user.getId());
             log.info("User with id={} has liked film '{}'.", user.getId(), film.getName());
         } else {
@@ -65,10 +72,10 @@ public class JdbcFilmService implements AbstractFilmService {
 
     @Override
     public Film removeLike(Integer userId, Integer filmId) {
-        User user = jdbcUserService.getUserById(userId);
+        User user = userService.getUserById(userId);
         Film film = getFilmById(filmId);
         Likes like = new Likes(userId, filmId);
-        if (jdbcLikesRepository.delete(like) != null) {
+        if (likesRepository.delete(like) != null) {
             log.info("User with id={} has removed like from film '{}'.", user.getId(), film.getName());
             film.getLikedUsers().remove(user.getId());
         } else {
@@ -79,22 +86,12 @@ public class JdbcFilmService implements AbstractFilmService {
 
     @Override
     public Iterable<Film> getMostPopularFilms(int count) {
-        Collection<Film> selectedPopular = jdbcFilmRepository
-                .findFirstNTopRows(count);
-        if (selectedPopular.isEmpty()) {
-            return jdbcFilmRepository
-                    .findAll()
-                    .stream()
-                    .limit(count)
-                    .collect(Collectors.toList());
-        } else {
-            return selectedPopular;
-        }
+        return filmRepository.findFirstNTopRows(count);
     }
 
     @Override
     public Integer deleteFilm(Film film) {
-        Film deletedFilm = jdbcFilmRepository.delete(film);
+        Film deletedFilm = filmRepository.delete(film);
         if (deletedFilm == null) {
             throw new FilmNotFoundException(film);
         } else {

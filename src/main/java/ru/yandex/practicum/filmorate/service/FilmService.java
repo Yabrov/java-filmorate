@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import ru.yandex.practicum.filmorate.model.Film;
 
-public interface AbstractFilmService {
+public interface FilmService {
 
     Film getFilmById(Integer filmId);
 
