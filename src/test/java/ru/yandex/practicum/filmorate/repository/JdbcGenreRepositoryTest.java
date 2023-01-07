@@ -4,8 +4,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Qualifier;
 import ru.yandex.practicum.filmorate.exception.JdbcQueryExecutionException;
-import ru.yandex.practicum.filmorate.model.*;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.time.LocalDate;
@@ -30,14 +31,14 @@ public class JdbcGenreRepositoryTest extends AbstractRepositoryTest<Integer, Gen
 
     @Test
     @Override
-    @DisplayName("Тест вставки нового жанра в базу")
+    @DisplayName("JDBC: Тест вставки нового жанра в базу")
     void insertTest() throws JdbcQueryExecutionException {
         persistEntity(entity, entity.getId());
     }
 
     @Test
     @Override
-    @DisplayName("Тест обновления жанра")
+    @DisplayName("JDBC: Тест обновления жанра")
     void updateTest() throws JdbcQueryExecutionException {
         Genre createdGenre = repository.findById(1);
         String updatedGenreName = "XXX updated";
@@ -49,7 +50,7 @@ public class JdbcGenreRepositoryTest extends AbstractRepositoryTest<Integer, Gen
 
     @Test
     @Override
-    @DisplayName("Тест удаления жанра из базы")
+    @DisplayName("JDBC: Тест удаления жанра из базы")
     void deleteTest() throws JdbcQueryExecutionException {
         Genre createdGenre = repository.findById(1);
         Genre deletedGenre = repository.delete(createdGenre);
@@ -58,15 +59,16 @@ public class JdbcGenreRepositoryTest extends AbstractRepositoryTest<Integer, Gen
 
     @Test
     @Override
-    @DisplayName("Тест получения жанра по id")
+    @DisplayName("JDBC: Тест получения жанра по id")
     void getByIdTest() throws JdbcQueryExecutionException {
         Genre createdGenre = repository.findById(1);
         Genre fetchedGenre = repository.findById(createdGenre.getId());
         assertEquals(createdGenre, fetchedGenre, "Полученный жанр не совпадает сохраненному.");
     }
+
     @Test
     @Override
-    @DisplayName("Тест получения всех жанров")    
+    @DisplayName("JDBC: Тест получения всех жанров")
     void getAllTest() throws JdbcQueryExecutionException {
         Collection<Genre> users = repository.findAll();
         assertEquals(6, users.size(), "Жанры не получены");
@@ -74,7 +76,7 @@ public class JdbcGenreRepositoryTest extends AbstractRepositoryTest<Integer, Gen
 
     @Test
     @Override
-    @DisplayName("Тест получения самых популярных жанров")
+    @DisplayName("JDBC: Тест получения самых популярных жанров")
     void findFirstNTopRowsTest() throws JdbcQueryExecutionException {
         for (int i = 1; i <= 6; i++) {
             Film film = Film.builder()

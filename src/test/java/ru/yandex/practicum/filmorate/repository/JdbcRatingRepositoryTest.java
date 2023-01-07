@@ -30,14 +30,14 @@ public class JdbcRatingRepositoryTest extends AbstractRepositoryTest<Integer, Ra
 
     @Test
     @Override
-    @DisplayName("Тест вставки нового рэйтинга в базу")
+    @DisplayName("JDBC: Тест вставки нового рэйтинга в базу")
     void insertTest() throws JdbcQueryExecutionException {
         persistEntity(entity, entity.getId());
     }
 
     @Test
     @Override
-    @DisplayName("Тест обновления рэйтинга")
+    @DisplayName("JDBC: Тест обновления рэйтинга")
     void updateTest() throws JdbcQueryExecutionException {
         Rating createdRating = repository.findById(1);
         String updatedRatingName = "XXX updated";
@@ -49,7 +49,7 @@ public class JdbcRatingRepositoryTest extends AbstractRepositoryTest<Integer, Ra
 
     @Test
     @Override
-    @DisplayName("Тест удаления рэйтинга из базы")
+    @DisplayName("JDBC: Тест удаления рэйтинга из базы")
     void deleteTest() throws JdbcQueryExecutionException {
         Rating createdRating = repository.findById(1);
         Rating deletedRating = repository.delete(createdRating);
@@ -58,15 +58,16 @@ public class JdbcRatingRepositoryTest extends AbstractRepositoryTest<Integer, Ra
 
     @Test
     @Override
-    @DisplayName("Тест получения рэйтинга по id")
+    @DisplayName("JDBC: Тест получения рэйтинга по id")
     void getByIdTest() throws JdbcQueryExecutionException {
         Rating createdRating = repository.findById(1);
         Rating fetchedRating = repository.findById(createdRating.getId());
         assertEquals(createdRating, fetchedRating, "Полученный рэйтинг не совпадает сохраненному.");
     }
+
     @Test
     @Override
-    @DisplayName("Тест получения всех рэйтингов")
+    @DisplayName("JDBC: Тест получения всех рэйтингов")
     void getAllTest() throws JdbcQueryExecutionException {
         Collection<Rating> users = repository.findAll();
         assertEquals(5, users.size(), "Жанры не получены");
@@ -74,7 +75,7 @@ public class JdbcRatingRepositoryTest extends AbstractRepositoryTest<Integer, Ra
 
     @Test
     @Override
-    @DisplayName("Тест получения самых популярных рэйтингов")
+    @DisplayName("JDBC: Тест получения самых популярных рэйтингов")
     void findFirstNTopRowsTest() throws JdbcQueryExecutionException {
         for (int i = 1; i <= 6; i++) {
             Film film = Film.builder()

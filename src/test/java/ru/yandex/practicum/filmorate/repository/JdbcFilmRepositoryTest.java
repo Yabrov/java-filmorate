@@ -47,14 +47,14 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
 
     @Test
     @Override
-    @DisplayName("Тест вставки нового фильма в базу")
+    @DisplayName("JDBC: Тест вставки нового фильма в базу")
     void insertTest() throws JdbcQueryExecutionException {
         persistEntity(entity, 1);
     }
 
     @Test
     @Override
-    @DisplayName("Тест обновления фильма")
+    @DisplayName("JDBC: Тест обновления фильма")
     void updateTest() throws JdbcQueryExecutionException {
         Film createdFilm = persistEntity(entity, 1);
         String updatedFilmName = "Updated film name";
@@ -66,7 +66,7 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
 
     @Test
     @Override
-    @DisplayName("Тест удаления фильма из базы")
+    @DisplayName("JDBC: Тест удаления фильма из базы")
     void deleteTest() throws JdbcQueryExecutionException {
         Film createdFilm = persistEntity(entity, 1);
         Film deletedFilm = repository.delete(createdFilm);
@@ -75,7 +75,7 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
 
     @Test
     @Override
-    @DisplayName("Тест получения фильма по id")
+    @DisplayName("JDBC: Тест получения фильма по id")
     void getByIdTest() throws JdbcQueryExecutionException {
         Film createdFilm = persistEntity(entity, 1);
         Film fetchedFilm = repository.findById(createdFilm.getId());
@@ -84,7 +84,7 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
 
     @Test
     @Override
-    @DisplayName("Тест получения всех фильмов")
+    @DisplayName("JDBC: Тест получения всех фильмов")
     void getAllTest() throws JdbcQueryExecutionException {
         for (int i = 1; i <= 10; i++) {
             persistEntity(entity.withName("test name" + i), i);
@@ -95,7 +95,7 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
 
     @Test
     @Override
-    @DisplayName("Тест получения самых популярных фильмов")
+    @DisplayName("JDBC: Тест получения самых популярных фильмов")
     void findFirstNTopRowsTest() {
         for (int i = 1; i <= 10; i++) {
             persistEntity(entity.withName("test name" + i), i);

@@ -37,14 +37,14 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
 
     @Test
     @Override
-    @DisplayName("Тест вставки нового пользователя в базу")
+    @DisplayName("JDBC: Тест вставки нового пользователя в базу")
     void insertTest() throws JdbcQueryExecutionException {
         persistEntity(entity, 1);
     }
 
     @Test
     @Override
-    @DisplayName("Тест обновления пользователя")
+    @DisplayName("JDBC: Тест обновления пользователя")
     void updateTest() throws JdbcQueryExecutionException {
         User createdUser = persistEntity(entity, 1);
         String updatedUserName = "Updated user name";
@@ -56,7 +56,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
 
     @Test
     @Override
-    @DisplayName("Тест удаления пользователя из базы")
+    @DisplayName("JDBC: Тест удаления пользователя из базы")
     void deleteTest() throws JdbcQueryExecutionException {
         User createdUser = persistEntity(entity, 1);
         User deletedUser = repository.delete(createdUser);
@@ -65,7 +65,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
 
     @Test
     @Override
-    @DisplayName("Тест получения пользователя по id")
+    @DisplayName("JDBC: Тест получения пользователя по id")
     void getByIdTest() throws JdbcQueryExecutionException {
         User createdUser = persistEntity(entity, 1);
         User fetchedUser = repository.findById(createdUser.getId());
@@ -74,7 +74,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
 
     @Test
     @Override
-    @DisplayName("Тест получения всех пользователей")
+    @DisplayName("JDBC: Тест получения всех пользователей")
     void getAllTest() throws JdbcQueryExecutionException {
         for (int i = 1; i <= 10; i++) {
             persistEntity(entity.withLogin("login" + i), i);
@@ -85,7 +85,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
 
     @Test
     @Override
-    @DisplayName("Тест получения самых популярных пользователей")
+    @DisplayName("JDBC: Тест получения самых популярных пользователей")
     void findFirstNTopRowsTest() {
         for (int i = 1; i <= 10; i++) {
             persistEntity(entity.withLogin("login" + i), i);
