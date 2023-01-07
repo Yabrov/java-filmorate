@@ -161,11 +161,14 @@ public class UserControllerTest extends AbstractControllerTest {
     void getAllUsersTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(serializeObject(user));
+                .content(serializeObject(user.withLogin("login1")));
         // Creating user1
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE));
+        builder = post("/users")
+                .contentType(MediaType.APPLICATION_JSON_VALUE)
+                .content(serializeObject(user.withLogin("login2")));
         // Creating user2
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -227,7 +230,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User createdUser = deserializeMvcResult(result, User.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(serializeObject(user.withName("User friend")));
+                .content(serializeObject(user.withLogin("login 2")));
         // Creating friend
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -291,7 +294,7 @@ public class UserControllerTest extends AbstractControllerTest {
         User createdUser = deserializeMvcResult(result, User.class);
         builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
-                .content(serializeObject(user.withName("User friend")));
+                .content(serializeObject(user.withLogin("login 2")));
         // Creating friend
         result = mockMvc.perform(builder)
                 .andExpect(status().isOk())
