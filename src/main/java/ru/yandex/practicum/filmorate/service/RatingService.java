@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.service;
 
 import ru.yandex.practicum.filmorate.model.Rating;
 
-public interface AbstractRatingService {
+public interface RatingService {
 
     Rating getRatingById(Integer ratingId);
 

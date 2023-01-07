@@ -1,20 +1,24 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.RatingNotFoundException;
 import ru.yandex.practicum.filmorate.model.Rating;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 @Service
-@RequiredArgsConstructor
-public class JdbcRatingService implements AbstractRatingService {
+public class RatingServiceImpl implements RatingService {
 
-    private final AbstractRepository<Integer, Rating> jdbcRatingRepository;
+    private final AbstractRepository<Integer, Rating> ratingRepository;
+
+    public RatingServiceImpl(
+            @Qualifier("inMemoryRatingRepository") AbstractRepository<Integer, Rating> ratingRepository) {
+        this.ratingRepository = ratingRepository;
+    }
 
     @Override
     public Rating getRatingById(Integer ratingId) {
-        Rating rating = jdbcRatingRepository.findById(ratingId);
+        Rating rating = ratingRepository.findById(ratingId);
         if (rating == null) {
             throw new RatingNotFoundException(ratingId);
         }
@@ -23,7 +27,7 @@ public class JdbcRatingService implements AbstractRatingService {
 
     @Override
     public Rating createRating(Rating rating) {
-        return jdbcRatingRepository.save(rating);
+        return ratingRepository.save(rating);
     }
 
     @Override
@@ -31,18 +35,18 @@ public class JdbcRatingService implements AbstractRatingService {
         if (rating.getId() == null || getRatingById(rating.getId()) == null) {
             throw new RatingNotFoundException(rating);
         }
-        return jdbcRatingRepository.update(rating);
+        return ratingRepository.update(rating);
     }
 
     @Override
     public Iterable<Rating> getAllRatings() {
-        return jdbcRatingRepository.findAll();
+        return ratingRepository.findAll();
     }
 
     @Override
     public Integer deleteRating(Integer ratingId) {
         Rating rating = getRatingById(ratingId);
-        jdbcRatingRepository.delete(rating);
+        ratingRepository.delete(rating);
         return rating.getId();
     }
 }

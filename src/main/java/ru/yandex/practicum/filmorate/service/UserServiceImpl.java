@@ -1,7 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
 import ru.yandex.practicum.filmorate.model.Friends;
@@ -16,15 +17,22 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
-public class JdbcUserService implements AbstractUserService {
+public class UserServiceImpl implements UserService {
 
-    private final AbstractRepository<Integer, User> jdbcUserRepository;
-    private final AbstractRepository<Friends, Friends> jdbcFriendsRepository;
+    private final AbstractRepository<Integer, User> userRepository;
+    private final AbstractRepository<Friends, Friends> friendsRepository;
+
+    @Autowired
+    public UserServiceImpl(
+            @Qualifier("inMemoryUserRepository") AbstractRepository<Integer, User> userRepository,
+            @Qualifier("inMemoryFriendsRepository") AbstractRepository<Friends, Friends> friendsRepository) {
+        this.userRepository = userRepository;
+        this.friendsRepository = friendsRepository;
+    }
 
     @Override
     public User getUserById(Integer userId) {
-        User user = jdbcUserRepository.findById(userId);
+        User user = userRepository.findById(userId);
         if (user == null) {
             throw new UserNotFoundException(userId);
         }
@@ -34,8 +42,8 @@ public class JdbcUserService implements AbstractUserService {
     @Override
     public User createUser(User user) {
         return isBlank(user.getName())
-                ? jdbcUserRepository.save(user.withName(user.getLogin()))
-                : jdbcUserRepository.save(user);
+                ? userRepository.save(user.withName(user.getLogin()))
+                : userRepository.save(user);
     }
 
     @Override
@@ -44,13 +52,13 @@ public class JdbcUserService implements AbstractUserService {
             throw new UserNotFoundException(user);
         }
         return isBlank(user.getName())
-                ? jdbcUserRepository.update(user.withName(user.getLogin()))
-                : jdbcUserRepository.update(user);
+                ? userRepository.update(user.withName(user.getLogin()))
+                : userRepository.update(user);
     }
 
     @Override
     public Iterable<User> getAllUsers() {
-        return jdbcUserRepository.findAll();
+        return userRepository.findAll();
     }
 
     @Override
@@ -61,7 +69,7 @@ public class JdbcUserService implements AbstractUserService {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
         Friends friends = new Friends(userId, friendId, FriendsStatus.REQUESTED);
-        if (jdbcFriendsRepository.save(friends) != null) {
+        if (friendsRepository.save(friends) != null) {
             user.getFriends().add(friend.getId());
             log.info("User with id {} adds friend with id {}.", userId, friendId);
         } else {
@@ -75,7 +83,7 @@ public class JdbcUserService implements AbstractUserService {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
         Friends friends = new Friends(userId, friendId, FriendsStatus.REQUESTED);
-        if (jdbcFriendsRepository.delete(friends) != null) {
+        if (friendsRepository.delete(friends) != null) {
             log.info("User with id {} removes friend with id {}.", userId, friendId);
             user.getFriends().remove(friend.getId());
         } else {
@@ -90,17 +98,17 @@ public class JdbcUserService implements AbstractUserService {
         User otherUser = getUserById(otherId);
         Set<Integer> mutualFriendsSet = new HashSet<>(user.getFriends());
         mutualFriendsSet.retainAll(otherUser.getFriends());
-        return jdbcUserRepository.findByIds(mutualFriendsSet);
+        return userRepository.findByIds(mutualFriendsSet);
     }
 
     @Override
     public Iterable<User> getUserFriends(Integer userId) {
-        return jdbcUserRepository.findByIds(getUserById(userId).getFriends());
+        return userRepository.findByIds(getUserById(userId).getFriends());
     }
 
     @Override
     public Integer deleteUser(User user) {
-        User deletedUser = jdbcUserRepository.delete(user);
+        User deletedUser = userRepository.delete(user);
         if (deletedUser == null) {
             throw new UserNotFoundException(user);
         } else {
