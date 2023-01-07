@@ -20,26 +20,24 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.TreeSet;
 
+@With
 @Value
 @Builder
 @NotNull
 public class Film {
 
-    @With
     Integer id;
 
-    @With
     @NotNull
     @NotBlank
     String name;
 
-    @With
     @NotNull
     @Size(max = 200)
     String description;
 
-    @With
     @NotNull
     @ReleaseDate
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -47,12 +45,10 @@ public class Film {
     @JsonDeserialize(using = LocalDateDeserializer.class)
     LocalDate releaseDate;
 
-    @With
     @NotNull
     @Positive
     Integer duration;
 
-    @With
     Rating rating;
 
     Set<Genre> genres;
@@ -78,6 +74,7 @@ public class Film {
         this.releaseDate = releaseDate;
         this.duration = duration;
         this.rating = rating;
-        this.genres = Objects.requireNonNullElseGet(genres, HashSet::new);
+        this.genres = Objects
+                .requireNonNullElseGet(genres, TreeSet::new);
     }
 }
