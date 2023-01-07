@@ -6,16 +6,13 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 
-import java.util.Objects;
-
+@With
 @Value
 @Builder
-public class Genre {
+public class Genre implements Comparable<Genre> {
 
-    @With
     Integer id;
 
-    @With
     String name;
 
     @JsonCreator
@@ -32,16 +29,7 @@ public class Genre {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof Genre)) return false;
-        Genre genre = (Genre) o;
-        return Objects.equals(id, genre.id)
-                && Objects.equals(name, genre.name);
-    }
-
-    @Override
-    public int hashCode() {
-        return id;
+    public int compareTo(Genre o) {
+        return id.compareTo(o.id);
     }
 }
