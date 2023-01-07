@@ -1,25 +1,20 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.AbstractFilmService;
+import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 
 @RestController
+@RequiredArgsConstructor
 public class FilmController {
 
-    private final AbstractFilmService filmService;
+    private final FilmService filmService;
 
-    @Autowired
-    public FilmController(@Qualifier("jdbcFilmService") AbstractFilmService filmService) {
-        this.filmService = filmService;
-    }
-
-    private final static String DEFAULT_RATING_COUNT = "10";
+    private static final String DEFAULT_RATING_COUNT = "10";
 
     @GetMapping(value = "/films/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Film getFilm(@PathVariable Integer id) {

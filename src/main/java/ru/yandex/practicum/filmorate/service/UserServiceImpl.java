@@ -24,8 +24,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     public UserServiceImpl(
-            @Qualifier("inMemoryUserRepository") AbstractRepository<Integer, User> userRepository,
-            @Qualifier("inMemoryFriendsRepository") AbstractRepository<Friends, Friends> friendsRepository) {
+            @Qualifier("jdbcUserRepository") AbstractRepository<Integer, User> userRepository,
+            @Qualifier("jdbcFriendsRepository") AbstractRepository<Friends, Friends> friendsRepository) {
         this.userRepository = userRepository;
         this.friendsRepository = friendsRepository;
     }

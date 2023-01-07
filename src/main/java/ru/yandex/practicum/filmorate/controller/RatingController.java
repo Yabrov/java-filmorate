@@ -1,21 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Rating;
-import ru.yandex.practicum.filmorate.service.AbstractRatingService;
+import ru.yandex.practicum.filmorate.service.RatingService;
 
 import javax.validation.Valid;
 
 @RestController
+@RequiredArgsConstructor
 public class RatingController {
 
-    private final AbstractRatingService ratingService;
-
-    public RatingController(@Qualifier("jdbcRatingService") AbstractRatingService ratingService) {
-        this.ratingService = ratingService;
-    }
+    private final RatingService ratingService;
 
     @GetMapping(value = "/mpa/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Rating getRating(@PathVariable Integer id) {

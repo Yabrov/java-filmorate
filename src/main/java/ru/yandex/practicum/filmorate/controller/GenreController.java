@@ -1,21 +1,18 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.Genre;
-import ru.yandex.practicum.filmorate.service.AbstractGenreService;
+import ru.yandex.practicum.filmorate.service.GenreService;
 
 import javax.validation.Valid;
 
 @RestController
+@RequiredArgsConstructor
 public class GenreController {
 
-    private final AbstractGenreService genreService;
-
-    public GenreController(@Qualifier("jdbcGenreService") AbstractGenreService genreService) {
-        this.genreService = genreService;
-    }
+    private final GenreService genreService;
 
     @GetMapping(value = "/genres/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Genre getGenre(@PathVariable Integer id) {

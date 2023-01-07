@@ -12,7 +12,7 @@ public class RatingServiceImpl implements RatingService {
     private final AbstractRepository<Integer, Rating> ratingRepository;
 
     public RatingServiceImpl(
-            @Qualifier("inMemoryRatingRepository") AbstractRepository<Integer, Rating> ratingRepository) {
+            @Qualifier("jdbcRatingRepository") AbstractRepository<Integer, Rating> ratingRepository) {
         this.ratingRepository = ratingRepository;
     }
 
