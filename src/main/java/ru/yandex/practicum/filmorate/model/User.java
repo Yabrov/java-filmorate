@@ -19,28 +19,24 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+@With
 @Value
 @Builder
 @NotNull
 public class User {
 
-    @With
     Integer id;
 
-    @With
     @Email
     @NotNull
     @NotBlank
     String email;
 
-    @With
     @NotBlank
     String login;
 
-    @With
     String name;
 
-    @With
     @Past
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd")

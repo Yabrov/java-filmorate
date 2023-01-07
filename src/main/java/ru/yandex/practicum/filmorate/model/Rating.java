@@ -6,14 +6,13 @@ import lombok.Builder;
 import lombok.Value;
 import lombok.With;
 
+@With
 @Value
 @Builder
 public class Rating {
 
-    @With
     Integer id;
 
-    @With
     String name;
 
     @JsonCreator
