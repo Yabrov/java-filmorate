@@ -19,6 +19,7 @@ import java.sql.Types;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -94,7 +95,7 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                     jdbcTemplate.update(insertFilmGenreSqlString, newId, genre.getId());
                 }
             }
-            return film.withId(keyHolder.getKey().intValue());
+            return film.withId(newId);
         } catch (DataAccessException e) {
             String mes = "Error when execute sql save for new film.";
             throw new JdbcQueryExecutionException(mes, e);
@@ -212,7 +213,11 @@ public class JdbcFilmRepository implements AbstractRepository<Integer, Film> {
                 film.getGenres().addAll(jdbcTemplate
                         .query(findGenresByFilmIdSqlString, genreMapper, film.getId()));
             }
-            return films;
+            if (films.isEmpty()) {
+                return findAll().stream().limit(n).collect(Collectors.toList());
+            } else {
+                return films;
+            }
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for popular films.";
             throw new JdbcQueryExecutionException(mes, e);

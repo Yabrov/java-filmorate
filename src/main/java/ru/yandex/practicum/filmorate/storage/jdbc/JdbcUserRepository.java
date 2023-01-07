@@ -17,6 +17,7 @@ import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
@@ -175,7 +176,11 @@ public class JdbcUserRepository implements AbstractRepository<Integer, User> {
                 user.getLikedFilms().addAll(jdbcTemplate
                         .queryForList(findFilmsByUserIdSqlString, Integer.class, user.getId()));
             }
-            return users;
+            if (users.isEmpty()) {
+                return findAll().stream().limit(n).collect(Collectors.toList());
+            } else {
+                return users;
+            }
         } catch (DataAccessException e) {
             String mes = "Error when execute sql select for popular users.";
             throw new JdbcQueryExecutionException(mes, e);
