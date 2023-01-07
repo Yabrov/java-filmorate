@@ -61,8 +61,7 @@ public class JdbcUserService implements AbstractUserService {
         User user = getUserById(userId);
         User friend = getUserById(friendId);
         Friends friends = new Friends(userId, friendId, FriendsStatus.REQUESTED);
-        if (jdbcFriendsRepository.findById(friends) == null) {
-            jdbcFriendsRepository.save(friends);
+        if (jdbcFriendsRepository.save(friends) != null) {
             user.getFriends().add(friend.getId());
             log.info("User with id {} adds friend with id {}.", userId, friendId);
         } else {
