@@ -102,16 +102,16 @@ public class JdbcFriendsRepository implements AbstractRepository<Friends, Friend
 
     @Override
     public Collection<Friends> findAll() {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Collection<Friends> findByIds(Collection<Friends> ids) {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Collection<Friends> findFirstNTopRows(Integer n) {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 }

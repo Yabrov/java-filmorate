@@ -81,16 +81,16 @@ public class JdbcLikesRepository implements AbstractRepository<Likes, Likes> {
 
     @Override
     public Collection<Likes> findAll() {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Collection<Likes> findByIds(Collection<Likes> ids) {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public Collection<Likes> findFirstNTopRows(Integer n) {
-        return Collections.emptyList();
+        throw new UnsupportedOperationException();
     }
 }
