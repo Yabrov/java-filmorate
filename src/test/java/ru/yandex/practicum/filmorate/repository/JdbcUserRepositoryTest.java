@@ -77,7 +77,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
     @DisplayName("Тест получения всех пользователей")
     void getAllTest() throws JdbcQueryExecutionException {
         for (int i = 1; i <= 10; i++) {
-            persistEntity(entity.withName("test name" + i), i);
+            persistEntity(entity.withLogin("login" + i), i);
         }
         Collection<User> users = repository.findAll();
         assertEquals(10, users.size(), "Пользователи не получены");
@@ -88,7 +88,7 @@ public class JdbcUserRepositoryTest extends AbstractRepositoryTest<Integer, User
     @DisplayName("Тест получения самых популярных пользователей")
     void findFirstNTopRowsTest() {
         for (int i = 1; i <= 10; i++) {
-            persistEntity(entity.withName("test name" + i), i);
+            persistEntity(entity.withLogin("login" + i), i);
         }
         for (int i = 1; i <= 10; i++) {
             for (int j = 10; j > i; j--) {

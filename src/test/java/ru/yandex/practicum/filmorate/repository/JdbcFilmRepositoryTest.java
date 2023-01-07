@@ -103,7 +103,7 @@ public class JdbcFilmRepositoryTest extends AbstractRepositoryTest<Integer, Film
         for (int i = 1; i <= 10; i++) {
             userRepository.save(User.builder()
                     .id(null)
-                    .login("login")
+                    .login("login" + i)
                     .name("username")
                     .email("test@domain.xxx")
                     .birthday(LocalDate.of(1980, 1, 1))
