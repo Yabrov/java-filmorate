@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.FriendsStatus;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
-import java.util.Collections;
 
 @Repository
 @RequiredArgsConstructor
@@ -20,7 +19,7 @@ public class JdbcFriendsRepository implements AbstractRepository<Friends, Friend
     private final JdbcTemplate jdbcTemplate;
 
     private static final String saveFriendsSqlString =
-            "INSERT INTO FRIENDS(user_id, status, friend_id) VALUES(?, ?, ?)";
+            "MERGE INTO FRIENDS(user_id, status, friend_id) VALUES(?, ?, ?)";
 
     private static final String updateFriendsSqlString =
             "UPDATE FRIENDS SET status = ? WHERE friend_id = ? AND user_id = ?";

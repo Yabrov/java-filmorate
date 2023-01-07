@@ -11,7 +11,6 @@ import ru.yandex.practicum.filmorate.model.Likes;
 import ru.yandex.practicum.filmorate.storage.AbstractRepository;
 
 import java.util.Collection;
-import java.util.Collections;
 
 @Repository
 @RequiredArgsConstructor
@@ -21,7 +20,7 @@ public class JdbcLikesRepository implements AbstractRepository<Likes, Likes> {
 
     private final RowMapper<Likes> likesMapper;
 
-    private static final String insertLikeSqlString = "INSERT INTO LIKES(user_id, film_id) VALUES(?, ?)";
+    private static final String insertLikeSqlString = "MERGE INTO LIKES(user_id, film_id) VALUES(?, ?)";
 
     private static final String deleteLikeSqlString = "DELETE FROM LIKES WHERE user_id = ? AND film_id = ?";
 
