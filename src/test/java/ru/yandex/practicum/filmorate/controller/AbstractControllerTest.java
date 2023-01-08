@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -18,6 +19,8 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 @AutoConfigureMockMvc
 @AutoConfigureTestDatabase
@@ -29,7 +32,7 @@ import java.time.LocalDate;
         scripts = {"classpath:schema.sql", "classpath:data.sql"}
 )
 @ComponentScan("ru.yandex.practicum.filmorate")
-abstract class AbstractControllerTest {
+public abstract class AbstractControllerTest {
 
     protected final static String ERROR_MES_TEMPLATE
             = "Validation exception [class: '%s', field: '%s', mes: '%s']";
@@ -72,5 +75,10 @@ abstract class AbstractControllerTest {
 
     protected static String serializeObject(Object obj) throws Exception {
         return getMapper().writeValueAsString(obj);
+    }
+
+    @Test
+    public void trigger() {
+        assertEquals(1, 1);
     }
 }
