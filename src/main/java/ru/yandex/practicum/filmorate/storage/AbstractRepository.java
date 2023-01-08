@@ -2,7 +2,7 @@ package ru.yandex.practicum.filmorate.storage;
 
 import java.util.Collection;
 
-public interface AbstractRepository<T> {
+public interface AbstractRepository<R, T> {
 
     T save(T t);
 
@@ -10,7 +10,11 @@ public interface AbstractRepository<T> {
 
     T delete(T t);
 
-    T findById(Integer id);
+    T findById(R id);
 
     Collection<T> findAll();
+
+    Collection<T> findByIds(Collection<R> ids);
+
+    Collection<T> findFirstNTopRows(Integer n);
 }

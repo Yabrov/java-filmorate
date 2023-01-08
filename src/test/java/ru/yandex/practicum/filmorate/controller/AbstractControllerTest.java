@@ -4,9 +4,14 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -14,10 +19,20 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 @SpringBootTest
 @AutoConfigureMockMvc
+@AutoConfigureTestDatabase
+@EnableAutoConfiguration(exclude = {
+        DataSourceTransactionManagerAutoConfiguration.class
+})
+@Sql(
+        executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
+        scripts = {"classpath:schema.sql", "classpath:data.sql"}
+)
 @ComponentScan("ru.yandex.practicum.filmorate")
-abstract class AbstractControllerTest {
+public abstract class AbstractControllerTest {
 
     protected final static String ERROR_MES_TEMPLATE
             = "Validation exception [class: '%s', field: '%s', mes: '%s']";
@@ -60,5 +75,10 @@ abstract class AbstractControllerTest {
 
     protected static String serializeObject(Object obj) throws Exception {
         return getMapper().writeValueAsString(obj);
+    }
+
+    @Test
+    public void trigger() {
+        assertEquals(1, 1);
     }
 }

@@ -14,7 +14,7 @@ public class FilmController {
 
     private final FilmService filmService;
 
-    private final static String DEFAULT_RATING_COUNT = "10";
+    private static final String DEFAULT_RATING_COUNT = "10";
 
     @GetMapping(value = "/films/{id}", produces = MediaType.APPLICATION_JSON_VALUE)
     public Film getFilm(@PathVariable Integer id) {

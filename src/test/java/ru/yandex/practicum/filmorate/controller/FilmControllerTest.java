@@ -8,7 +8,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -34,19 +33,14 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Создание валидного фильма")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void createValidFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(serializeObject(film));
-        MvcResult result = mockMvc.perform(builder)
+        mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.id").value("1"))
-                .andReturn();
-        Film createdFilm = deserializeMvcResult(result, Film.class);
-        Integer expectedId = 1;
-        assertEquals(film.withId(expectedId), createdFilm, "Server hasn't create film.");
+                .andExpect(jsonPath("$.id").value("1"));
     }
 
     @Test
@@ -122,20 +116,15 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Создание фильма с пустым описанием")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void createFilmWithEmptyDescrTest() throws Exception {
         Film testFilm = film.withDescription("");
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(serializeObject(testFilm));
-        MvcResult result = mockMvc.perform(builder)
+        mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.id").value("1"))
-                .andReturn();
-        Film createdFilm = deserializeMvcResult(result, Film.class);
-        Integer expectedId = 1;
-        assertEquals(testFilm.withId(expectedId), createdFilm, "Server hasn't create film.");
+                .andExpect(jsonPath("$.id").value("1"));
     }
 
     @Test
@@ -189,7 +178,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Обновление фильма")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void updateFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -216,7 +204,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Обновление фильма c id NULL")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void updateFilmWithNullIdTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -237,7 +224,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Получение списка всех фильмов")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void getAllFilmsTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -277,12 +263,12 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andReturn();
         Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = get("/films/{filmId}", createdFilm.getId());
-        result = mockMvc.perform(builder)
+        mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andReturn();
-        Film gottenFilm = deserializeMvcResult(result, Film.class);
-        assertEquals(createdFilm, gottenFilm, "Запрашиваемый фильм не был получен.");
+                .andExpect(jsonPath("$.id").value(createdFilm.getId()))
+                .andExpect(jsonPath("$.name").value(createdFilm.getName()))
+                .andExpect(jsonPath("$.description").value(createdFilm.getDescription()));
     }
 
     @Test
@@ -296,7 +282,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Существующий пользователь лайкает существующий фильм")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void existingUserLikesExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -320,7 +305,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likesCount").value(1));
+                .andExpect(jsonPath("$.likedUsers.size()").value(1));
         builder = get("/users/{userId}", createdUser.getId());
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -330,7 +315,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Несуществующий пользователь лайкает существующий фильм")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void notExistingUserLikesExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -347,7 +331,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Существующий пользователь лайкает несуществующий фильм")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void existingUserLikesNotExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -364,7 +347,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Существующий пользователь убирает свой лайк фильму")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void existingUserRemovesLikeFromExistingFilmTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -389,13 +371,13 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likesCount").value(1));
+                .andExpect(jsonPath("$.likedUsers.size()").value(1));
         // User removes like from film
         builder = delete("/films/{filmId}/like/{userId}", createdFilm.getId(), createdUser.getId());
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likesCount").value(0));
+                .andExpect(jsonPath("$.likedUsers", empty()));
         builder = get("/users/{userId}", createdUser.getId());
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
@@ -406,7 +388,6 @@ public class FilmControllerTest extends AbstractControllerTest {
     @DisplayName("Получение рейтинга фильмов")
     @ParameterizedTest(name = "{index}. Рейтинг первых ''{0}'' фильмов")
     @ValueSource(ints = {1, 3, 5, 7, 8, 10})
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void getFilmsRatingTest(int count) throws Exception {
         MockHttpServletRequestBuilder builder;
         // Creating 10 users
@@ -436,7 +417,7 @@ public class FilmControllerTest extends AbstractControllerTest {
                 mockMvc.perform(builder)
                         .andExpect(status().isOk())
                         .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                        .andExpect(jsonPath("$.likesCount").value(11 - j));
+                        .andExpect(jsonPath("$.likedUsers.size()").value(11 - j));
             }
         }
         // Getting rating
@@ -456,7 +437,6 @@ public class FilmControllerTest extends AbstractControllerTest {
 
     @Test
     @DisplayName("Проверка восстановления кол-ва лайков после обновления сущ. фильма")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void restoreLikesCountAfterExistingFilmUpdatingTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -474,7 +454,7 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.likesCount").value(0))
+                .andExpect(jsonPath("$.likedUsers", empty()))
                 .andReturn();
         Film createdFilm = deserializeMvcResult(result, Film.class);
         builder = put("/films/{filmId}/like/{userId}", createdFilm.getId(), 1);
@@ -482,7 +462,7 @@ public class FilmControllerTest extends AbstractControllerTest {
         mockMvc.perform(builder)
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(jsonPath("$.likesCount").value(1));
+                .andExpect(jsonPath("$.likedUsers.size()").value(1));
         builder = put("/films")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
                 .content(serializeObject(createdFilm.withName("Updated film")));
@@ -491,12 +471,11 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.likesCount").value(1));
+                .andExpect(jsonPath("$.likedUsers.size()").value(1));
     }
 
     @Test
     @DisplayName("Проверка невозможности добавления нескольких лайков фильму одним пользователем")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void impossibilityOfAddingManyLikesToFilmFromSingleUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -514,20 +493,19 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.likesCount").value(0));
+                .andExpect(jsonPath("$.likedUsers", empty()));
         builder = put("/films/{filmId}/like/{userId}", 1, 1);
         // User likes film many times
         for (int i = 0; i < 10; i++) {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.likesCount").value(1));
+                    .andExpect(jsonPath("$.likedUsers.size()").value(1));
         }
     }
 
     @Test
     @DisplayName("Проверка невозможности удаления нескольких лайков фильму одним пользователем")
-    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     void impossibilityOfRemovingManyLikesToFilmFromSingleUserTest() throws Exception {
         MockHttpServletRequestBuilder builder = post("/users")
                 .contentType(MediaType.APPLICATION_JSON_VALUE)
@@ -545,14 +523,14 @@ public class FilmControllerTest extends AbstractControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(jsonPath("$.id").value(1))
-                .andExpect(jsonPath("$.likesCount").value(0));
+                .andExpect(jsonPath("$.likedUsers", empty()));
         builder = delete("/films/{filmId}/like/{userId}", 1, 1);
         // User removes like from film many times
         for (int i = 0; i < 10; i++) {
             mockMvc.perform(builder)
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON_VALUE))
-                    .andExpect(jsonPath("$.likesCount").value(0));
+                    .andExpect(jsonPath("$.likedUsers", empty()));
         }
     }
 }

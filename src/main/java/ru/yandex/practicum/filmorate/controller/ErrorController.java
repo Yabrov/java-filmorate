@@ -12,12 +12,14 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-import ru.yandex.practicum.filmorate.exception.FilmNotFoundException;
-import ru.yandex.practicum.filmorate.exception.UserNotFoundException;
+import ru.yandex.practicum.filmorate.exception.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -30,6 +32,14 @@ public class ErrorController extends ResponseEntityExceptionHandler {
     private static final String PATH = "path";
     private static final String REASONS = "reasons";
     private static final String OBJECT = "object";
+
+    @ExceptionHandler(value = JdbcQueryExecutionException.class)
+    protected ResponseEntity<Object> jdbcQueryException(JdbcQueryExecutionException ex, WebRequest request) {
+        log.error(ex.getMessage());
+        Map<String, Object> body = getGeneralErrorBody(HttpStatus.INTERNAL_SERVER_ERROR, request);
+        body.put(REASONS, Collections.singletonList(ex.getMessage()));
+        return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
 
     @ExceptionHandler(value = FilmNotFoundException.class)
     protected ResponseEntity<Object> filmNotFound(FilmNotFoundException ex, WebRequest request) {
@@ -45,6 +55,24 @@ public class ErrorController extends ResponseEntityExceptionHandler {
         log.error(ex.getMessage());
         Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
         body.put(OBJECT, ex.getUser());
+        body.put(REASONS, Collections.singletonList(ex.getMessage()));
+        return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(value = GenreNotFoundException.class)
+    protected ResponseEntity<Object> genreNotFound(GenreNotFoundException ex, WebRequest request) {
+        log.error(ex.getMessage());
+        Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
+        body.put(OBJECT, ex.getGenre());
+        body.put(REASONS, Collections.singletonList(ex.getMessage()));
+        return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
+    }
+
+    @ExceptionHandler(value = RatingNotFoundException.class)
+    protected ResponseEntity<Object> ratingNotFound(RatingNotFoundException ex, WebRequest request) {
+        log.error(ex.getMessage());
+        Map<String, Object> body = getGeneralErrorBody(HttpStatus.NOT_FOUND, request);
+        body.put(OBJECT, ex.getRating());
         body.put(REASONS, Collections.singletonList(ex.getMessage()));
         return handleExceptionInternal(ex, body, new HttpHeaders(), HttpStatus.NOT_FOUND, request);
     }
